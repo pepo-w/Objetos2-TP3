@@ -35,6 +35,7 @@ QuestionRetriever >> option: anOption [
 
 { #category : #retrieving }
 QuestionRetriever >> retrieveQuestions: aUser [
+	"Este es el metodo mas polemico"
 	| qRet temp followingCol topicsCol newsCol popularTCol averageVotes|
 	qRet := OrderedCollection new.
 	option = #social ifTrue:[
