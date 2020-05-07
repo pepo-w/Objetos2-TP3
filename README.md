@@ -2,11 +2,11 @@
 <h2>REGISTRO DE BAD SMELLS Y REFACTORING</h2>
 <hr>
 <strong>Answer>>positiveVotes</strong>
-<pre>  
+<pre>
   | r | 
   r := OrderedCollection new. 
   votes do:[:vote | vote isLike ifTrue:[r add: vote]]. 
-  ^r 
+  ^r
 </pre>
 
 <p><em>Bad smell</em>: reinventando la rueda o duplicated code.</p>
@@ -21,7 +21,7 @@
   | r |
   r := OrderedCollection new.  
   votes do:[:vote | vote isLike ifFalse:[r add: vote]]. 
-  ^r  
+  ^r
 </pre>
 
 <p><em>Bad smell</em>: reinventando la rueda o duplicated code.</p>
