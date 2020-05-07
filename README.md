@@ -13,7 +13,7 @@
 <p>Se itera sobre la coleccion votes con 'do', cuando puede obtenerse el mismo resultado con otro metodo de la clase OrderedCollection. </p>
 <p><em>Refactoring</em>: replace algorithm.</p>
 <p>Se utiliza 'select' en lugar de 'do', eliminando la expresión 'ifTrue', y se retorna el resultado de la operación. Se elimina la variable local. </p>
-<code>  ^ votes select: [ :vote | vote isLike ]. </code>
+<pre>  ^ votes select: [ :vote | vote isLike ]. </pre>
 <br>
 <hr>
 
@@ -29,6 +29,6 @@
 <p>Se itera sobre la coleccion votes con 'do', cuando puede obtenerse el mismo resultado con otro metodo de la clase OrderedCollection. </p>
 <p><em>Refactoring</em>: replace algorithm.</p>
 <p>Se utiliza 'reject' en lugar de 'do', eliminando la expresión 'ifFalse:', y se retorna el resultado de la operación. Se elimina la variable local. </p>
-<code> ^ votes reject: [ :vote | vote isLike ]. </code>
+<pre>  ^ votes reject: [ :vote | vote isLike ]. </pre>
 <br>
 <hr>
