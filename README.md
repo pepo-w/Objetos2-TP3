@@ -4,10 +4,12 @@ refactoring de cuoora implementado por catedra.
 <h2>REGISTRO DE BAD SMELLS Y REFACTORING</h2>
 
 <strong>Answer>>positiveVotes</strong>
-<pre>  | r | 
+<pre>  
+  | r | 
   r := OrderedCollection new. 
   votes do:[:vote | vote isLike ifTrue:[r add: vote]]. 
-  ^r </pre>
+  ^r 
+</pre>
 
 <p><em>Bad smell</em>: reinventando la rueda o duplicated code.</p>
 <p>Se itera sobre la coleccion votes con 'do', cuando puede obtenerse el mismo resultado con otro metodo de la clase OrderedCollection </p>
