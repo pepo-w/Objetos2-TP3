@@ -3,10 +3,10 @@ refactoring de cuoora implementado por catedra.
 
 <h2>REGISTRO DE BAD SMELLS Y REFACTORING</h2>
 
-<strong>Answer>>positiveVotes</strong>
-<code>  | r | </code>
-<code>  r := OrderedCollection new. </code>
-<code>  votes do:[:vote | vote isLike ifTrue:[r add: vote]]. </code>
+<strong>Answer>>positiveVotes</strong><br>
+<code>  | r | </code><br>
+<code>  r := OrderedCollection new. </code><br>
+<code>  votes do:[:vote | vote isLike ifTrue:[r add: vote]]. </code><br>
 <code>  ^r </code>
 
 <p>Bad smell: reinventando la rueda o duplicated code.
@@ -17,10 +17,10 @@ refactoring de cuoora implementado por catedra.
 <code>  ^ votes select: [ :vote | vote isLike ]. </code>
 <br><br>
 
-<strong>Answer>>negativeVotes</strong>
-<code>  | r |  </code>
-<code>  r := OrderedCollection new.  </code>
-<code>  votes do:[:vote | vote isLike ifFalse:[r add: vote]].  </code>
+<strong>Answer>>negativeVotes</strong><br>
+<code>  | r |  </code><br>
+<code>  r := OrderedCollection new.  </code><br>
+<code>  votes do:[:vote | vote isLike ifFalse:[r add: vote]].  </code><br>
 <code>  ^r  </code>
 
 <p>Bad smell: reinventando la rueda o duplicated code.
