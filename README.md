@@ -5,10 +5,10 @@ refactoring de cuoora implementado por catedra.
 
 <strong>Answer>>positiveVotes</strong>
 <code>
-  | r |
-	r := OrderedCollection new.
-	votes do:[:vote | vote isLike ifTrue:[r add: vote]].
-	^r
+  | r | <br>
+  r := OrderedCollection new.
+  votes do:[:vote | vote isLike ifTrue:[r add: vote]].
+  ^r
 </code>
 <p>Bad smell: reinventando la rueda o duplicated code.
   Se itera sobre la coleccion votes con 'do', cuando puede obtenerse el mismo resultado con otro metodo de la clase OrderedCollection. </p>
