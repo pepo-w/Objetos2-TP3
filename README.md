@@ -11,7 +11,7 @@
 
 <p><em>Bad smell</em>: reinventando la rueda o duplicated code.</p>
 <p>Se itera sobre la coleccion votes con 'do', cuando puede obtenerse el mismo resultado con otro metodo de la clase OrderedCollection. </p>
-<p><em>Refactoring</em>: replace algorithm.</p>
+<p><em>Refactoring</em>: substitute algorithm.</p>
 <p>Se utiliza 'select' en lugar de 'do', eliminando la expresión 'ifTrue', y se retorna el resultado de la operación. Se elimina la variable local. </p>
 <pre>  ^ votes select: [ :vote | vote isLike ]. </pre>
 <hr>
@@ -26,7 +26,7 @@
 
 <p><em>Bad smell</em>: reinventando la rueda o duplicated code.</p>
 <p>Se itera sobre la coleccion votes con 'do', cuando puede obtenerse el mismo resultado con otro metodo de la clase OrderedCollection. </p>
-<p><em>Refactoring</em>: replace algorithm.</p>
+<p><em>Refactoring</em>: substitute algorithm.</p>
 <p>Se utiliza 'reject' en lugar de 'do', eliminando la expresión 'ifFalse:', y se retorna el resultado de la operación. Se elimina la variable local. </p>
 <pre>  ^ votes reject: [ :vote | vote isLike ]. </pre>
 <hr>
