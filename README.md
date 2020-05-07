@@ -14,7 +14,6 @@
 <p><em>Refactoring</em>: replace algorithm.</p>
 <p>Se utiliza 'select' en lugar de 'do', eliminando la expresión 'ifTrue', y se retorna el resultado de la operación. Se elimina la variable local. </p>
 <pre>  ^ votes select: [ :vote | vote isLike ]. </pre>
-<br>
 <hr>
 
 <strong>Answer>>negativeVotes</strong>
@@ -30,5 +29,4 @@
 <p><em>Refactoring</em>: replace algorithm.</p>
 <p>Se utiliza 'reject' en lugar de 'do', eliminando la expresión 'ifFalse:', y se retorna el resultado de la operación. Se elimina la variable local. </p>
 <pre>  ^ votes reject: [ :vote | vote isLike ]. </pre>
-<br>
 <hr>
