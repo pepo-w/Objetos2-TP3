@@ -59,6 +59,58 @@ En este caso se utilizan los métodos setters en ambos constructores, para inici
 <p><strong>Nota:</strong> Este bad smell se encuentra también en las clases Answer, Question, Topic, y User. Decidimos aplicar el mismo refactoring a dichas clases. Dado que la implementación es igual (a diferencia de los setters particulares que usa cada clase, y los nombres de los métodos), pensamos que no es necesario mostrar los snippet de código.</p>
 
 <hr>
+<strong>Question(class)>>newWithTitle: title description: aDescription user: aUser</strong>
+<pre>
+  ^ self new
+	  title: title;
+	  description: aDescription;
+		user: aUser;
+		yourself.
+</pre>
+
+<strong>Question(class)>>newWithTitle: title description: aDescription user: aUser topic: aTopic</strong>
+<pre>
+  ^ self new
+  user: aUser;
+  publication: aPublication;
+  dislike;
+  yourself
+</pre>
+
+<p><em>Bad smell</em>: Codigo duplicado. </p>
+<p>Al momento de realizar el refactoring anterior sobre la clase Question, notamos que utiliza dos constructores muy similares, que tienen código duplicado.</p>
+<p><em>Refactoring</em>: Remove setting Method. </p>
+<p>Además de eliminar los setters de la forma antes mencionada, decidimos eliminar el constructor <strong>Question(class)>>newWithTitle: title description: aDescription user: aUser</strong>, por el hecho de que el otro constructor es más completo y más utilizado. En consecuencia, modificamos el setUp de QuestionTest para que utilice el nuevo constructor.</p>
+
+<strong>Question(class)>>newWithTitle: aTitle description: aDescription user: aUser topic: aTopic</strong>
+<pre>
+  ^ self new
+  initWithTitle: aTitle description: aDescription user: aUser topic: aTopic;
+  yourself
+</pre>
+
+<strong>Question>>initWithTitle: aTitle description: aDescription user: aUser topic: aTopic</strong>
+<pre>
+  title := aTitle.
+	description := aDescription.
+	user := aUser.
+	self addTopic: aTopic.
+</pre>
+
+<p>Snippet del código antes de la eliminación del constructor</p>
+<strong>QuestionTest>>setUp</strong>
+<pre>
+    question := Question newWithTitle: 'Question  title' description: 'Question description' user: (User new) 
+</pre>
+
+<p>Luego del refactoring aplicado:</p>
+<strong>QuestionTest>>setUp</strong>
+<pre>
+    question := Question newWithTitle: 'Question  title' description: 'Question description' user: (User new) topic: (Topic new)
+</pre>
+
+
+<hr>
 <strong>Answer>>positiveVotes</strong>
 <pre>
   | r | 
