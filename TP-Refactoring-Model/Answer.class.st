@@ -1,28 +1,88 @@
 Class {
 	#name : #Answer,
-	#superclass : #Publication,
+	#superclass : #Object,
 	#instVars : [
-		'question'
+		'question',
+		'timestamp',
+		'user',
+		'votes',
+		'description'
 	],
 	#category : #'TP-Refactoring-Model'
 }
 
 { #category : #'instance creation' }
-Answer class >> new: aDescription user: aUser question: aQuestion [
+Answer class >> new: anAnswer user: aUser question: aQuestion [
 	^ self new
-		initWithDescription: aDescription user: aUser question: aQuestion;
+		description: anAnswer;
+		user: aUser;
+		question: aQuestion;
 		yourself
 ]
 
-{ #category : #initialization }
-Answer >> initWithDescription: aDescription user: aUser question: aQuestion [
-	description := aDescription.
-	user := aUser.
-	question := aQuestion.
+{ #category : #adding }
+Answer >> addVote: aVote [
+	votes add: aVote
+]
+
+{ #category : #accessing }
+Answer >> description [
+	^ description
+]
+
+{ #category : #private }
+Answer >> description: anObject [
+	description := anObject
 ]
 
 { #category : #initialize }
 Answer >> initialize [
 	votes := OrderedCollection new.
 	timestamp := DateAndTime now.
+]
+
+{ #category : #'as yet unclassified' }
+Answer >> negativeVotes [
+	| r |
+	r := OrderedCollection new.
+	votes do:[:vote | vote isLike ifFalse:[r add: vote]].
+	^r
+]
+
+{ #category : #'as yet unclassified' }
+Answer >> positiveVotes [
+	| r |
+	r := OrderedCollection new.
+	votes do:[:vote | vote isLike ifTrue:[r add: vote]].
+	^r
+]
+
+{ #category : #private }
+Answer >> question: aQuestion [
+	question := aQuestion 
+]
+
+{ #category : #accessing }
+Answer >> timestamp [
+	^ timestamp
+]
+
+{ #category : #private }
+Answer >> timestamp: anObject [
+	timestamp := anObject
+]
+
+{ #category : #accessing }
+Answer >> user [
+	^ user
+]
+
+{ #category : #private }
+Answer >> user: anObject [
+	user := anObject
+]
+
+{ #category : #accessing }
+Answer >> votes [
+	^ votes
 ]

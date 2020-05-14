@@ -12,7 +12,8 @@ Class {
 { #category : #'intance creation' }
 Topic class >> name: aName description: aDescription [
 	^ self new
-		initWithName: aName description: aDescription;
+		name: aName;
+		description: aDescription;
 		yourself
 ]
 
@@ -26,10 +27,9 @@ Topic >> description [
 	^ description
 ]
 
-{ #category : #initialization }
-Topic >> initWithName: aName description: aDescription [
-	name := aName.
-	description := aDescription.
+{ #category : #accessing }
+Topic >> description: anObject [
+	description := anObject
 ]
 
 { #category : #initialize }
@@ -40,6 +40,11 @@ Topic >> initialize [
 { #category : #accessing }
 Topic >> name [
 	^name
+]
+
+{ #category : #accessing }
+Topic >> name: anObject [
+	name := anObject
 ]
 
 { #category : #accessing }

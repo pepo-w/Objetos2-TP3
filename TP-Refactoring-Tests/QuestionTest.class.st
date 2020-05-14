@@ -9,7 +9,7 @@ Class {
 
 { #category : #setup }
 QuestionTest >> setUp [
-	question := Question newWithTitle: 'Question  title' description: 'Question description' user: (User new) topic: (Topic new)
+	question := Question  newWithTitle: 'Question  title' description: 'Question description' user: (User new) 
 
 ]
 
