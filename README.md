@@ -4,7 +4,6 @@
 <p><em>Bad smell</em>: Romper encapsulamiento. </p>
 <p>Los valores de las variables de instancia deberian ser seteadas solo cuando son creadas, y no deberían cambiar luego.
 En este caso se utilizan los métodos setters en ambos constructores, para inicializar el objeto. Estos setters luego pueden generear que se rompa el encapsulamiento, modificando por fuera de la propia clase Vote sus atributos. </p>
-<hr>
 <strong>Vote(class)>>user: aUser likesPublication: aPublication</strong>
 <pre>
   ^ self new
