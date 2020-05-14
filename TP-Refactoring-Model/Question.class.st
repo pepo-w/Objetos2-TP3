@@ -1,14 +1,10 @@
 Class {
 	#name : #Question,
-	#superclass : #Object,
+	#superclass : #Publication,
 	#instVars : [
 		'title',
 		'answers',
-		'topics',
-		'timestamp',
-		'user',
-		'votes',
-		'description'
+		'topics'
 	],
 	#category : #'TP-Refactoring-Model'
 }
@@ -27,16 +23,6 @@ Question >> addTopic: aTopic [
 
 ]
 
-{ #category : #adding }
-Question >> addVote: aVote [
-	votes add: aVote
-]
-
-{ #category : #accessing }
-Question >> description [
-	^ description
-]
-
 { #category : #initialization }
 Question >> initWithTitle: aTitle description: aDescription user: aUser topic: aTopic [
 	title := aTitle.
@@ -53,27 +39,6 @@ Question >> initialize [
 	timestamp := DateAndTime now.
 ]
 
-{ #category : #'as yet unclassified' }
-Question >> negativeVotes [
-	| r |
-	r := OrderedCollection new.
-	votes do:[:vote | vote isLike ifFalse:[r add: vote]].
-	^r
-]
-
-{ #category : #'as yet unclassified' }
-Question >> positiveVotes [
-	| r |
-	r := OrderedCollection new.
-	votes do:[:vote | vote isLike ifTrue:[r add: vote]].
-	^r
-]
-
-{ #category : #accessing }
-Question >> timestamp [
-	^ timestamp
-]
-
 { #category : #accessing }
 Question >> title [
 	^title 
@@ -82,14 +47,4 @@ Question >> title [
 { #category : #accessing }
 Question >> topics [
 	^topics 
-]
-
-{ #category : #accessing }
-Question >> user [
-	^ user
-]
-
-{ #category : #accessing }
-Question >> votes [
-	^ votes
 ]
