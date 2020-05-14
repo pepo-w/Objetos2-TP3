@@ -88,5 +88,5 @@ En este caso se utilizan los métodos setters en ambos constructores, para inici
 <p>Se utiliza 'reject' en lugar de 'do', eliminando la expresión 'ifFalse:', y se retorna el resultado de la operación. Se elimina la variable local. </p>
 <pre>  ^ votes reject: [ :vote | vote isLike ]. </pre>
 <hr>
-
+ 
 
