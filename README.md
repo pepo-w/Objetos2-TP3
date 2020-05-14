@@ -1,6 +1,9 @@
 # Objetos2-TP3 
 <h2>REGISTRO DE BAD SMELLS Y REFACTORING</h2> 
 
+<p><em>Bad smell</em>: Romper encapsulamiento. </p>
+<p>Los valores de las variables de instancia deberian ser seteadas solo cuando son creadas, y no deberían cambiar luego.
+En este caso se utilizan los métodos setters en ambos constructores, para inicializar el objeto. Estos setters luego pueden generear que se rompa el encapsulamiento, modificando por fuera de la propia clase Vote sus atributos. </p>
 <hr>
 <strong>Vote(class)>>user: aUser likesPublication: aPublication</strong>
 <pre>
@@ -29,11 +32,8 @@
   publication: anObject
 </pre>
 
-<p><em>Bad smell</em>: Romper encapsulamiento. </p>
-<p>Los valores de las variables de instancia deberian ser seteadas solo cuando son creadas, y no deberían cambiar luego.
-En este caso se utilizan los métodos setters en ambos constructores, para inicializar el objeto. Estos setters luego pueden generear que se rompa el encapsulamiento, modificando por fuera de la propia clase Vote sus atributos. </p>
 <p><em>Refactoring</em>: Remove setting Method. </p>
-<p>Eliminar los setters e inicializar los valores de las variables de instancia directamente mediante el constructor, agregando un método con protocolo privado que reciba parámetros para setear los atributos que sean necesarios.</p>
+<p>Eliminar los setters (verificando con antelación que no se utilizan) e inicializar los valores de las variables de instancia directamente mediante el constructor, agregando un método con protocolo privado que reciba parámetros para setear los atributos que sean necesarios.</p>
 
 <strong>Vote(private)>>initWithUser: anUser publication: aPublication</strong>
 <pre>
