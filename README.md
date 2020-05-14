@@ -71,9 +71,10 @@ En este caso se utilizan los métodos setters en ambos constructores, para inici
 <strong>Question(class)>>newWithTitle: title description: aDescription user: aUser topic: aTopic</strong>
 <pre>
   ^ self new
-  	user: aUser;
- 	publication: aPublication;
- 	dislike;
+  	title: title;
+	description: aDescription;
+	user: aUser;
+	addTopic: aTopic;
   	yourself.
 </pre>
 
