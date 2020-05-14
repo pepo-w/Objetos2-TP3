@@ -56,7 +56,7 @@ En este caso se utilizan los métodos setters en ambos constructores, para inici
   yourself
 </pre>
 
-<p><strong>Nota:</strong> Este bad smell se encuentra también en las clases Answer, Question, Topic, y User. Decidimos aplicar el mismo refactoring a dichas clases. A continuación se muestran los snippet de codigo resultantes luego del refactoring. </p>
+<p><strong>Nota:</strong> Este bad smell se encuentra también en las clases Answer, Question, Topic, y User. Decidimos aplicar el mismo refactoring a dichas clases. Dado que la implementación es igual (a diferencia de los setters particulares que usa cada clase, y los nombres de los métodos), pensamos que no es necesario mostrar los snippet de código.</p>
 
 <hr>
 <strong>Answer>>positiveVotes</strong>
