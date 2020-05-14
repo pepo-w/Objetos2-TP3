@@ -56,7 +56,7 @@ En este caso se utilizan los métodos setters en ambos constructores, para inici
   yourself
 </pre>
 
-<p><strong>Nota:</strong> Este bad smell se encuentra también en las clases Answer, Question, Topic, y User. Decidimos aplicar el mismo refactoring a dichas clases. Dado que la implementación es igual (a diferencia de los setters particulares que usa cada clase, y los nombres de los métodos).</p>
+<p><strong>Nota:</strong> Este bad smell se encuentra también en las clases Answer, Question, Topic, y User. Decidimos aplicar el mismo refactoring a dichas clases, procediendo de de la misma forma (eliminar <em>setters</em> innecesarios, agregar un método de instancia privado que inicie las variables de instancia y por supuesto modificar el constructor) </p>
 
 <hr>
 <strong>Question(class)>>newWithTitle: title description: aDescription user: aUser</strong>
