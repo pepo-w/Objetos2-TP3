@@ -62,23 +62,23 @@ En este caso se utilizan los métodos setters en ambos constructores, para inici
 <strong>Question(class)>>newWithTitle: title description: aDescription user: aUser</strong>
 <pre>
   ^ self new
-	  title: title;
-	  description: aDescription;
-		user: aUser;
-		yourself.
+	title: title;
+	description: aDescription;
+	user: aUser;
+	yourself.
 </pre>
 
 <strong>Question(class)>>newWithTitle: title description: aDescription user: aUser topic: aTopic</strong>
 <pre>
   ^ self new
-  user: aUser;
-  publication: aPublication;
-  dislike;
-  yourself
+  	user: aUser;
+ 	publication: aPublication;
+ 	dislike;
+  	yourself.
 </pre>
 
 <p><em>Bad smell</em>: Codigo duplicado. </p>
-<p>Al momento de realizar el refactoring anterior sobre la clase Question, notamos que utiliza dos constructores muy similares, que tienen código duplicado.</p>
+<p>Al momento de realizar el refactoring anterior () sobre la clase Question, notamos que utiliza dos constructores muy similares, que tienen código duplicado.</p>
 <p><em>Refactoring</em>: Remove setting Method. </p>
 <p>Además de eliminar los setters de la forma antes mencionada, decidimos eliminar el constructor <strong>Question(class)>>newWithTitle: title description: aDescription user: aUser</strong>, por el hecho de que el otro constructor es más completo y más utilizado. En consecuencia, modificamos el setUp de QuestionTest para que utilice el nuevo constructor.</p>
 
@@ -92,9 +92,9 @@ En este caso se utilizan los métodos setters en ambos constructores, para inici
 <strong>Question>>initWithTitle: aTitle description: aDescription user: aUser topic: aTopic</strong>
 <pre>
   title := aTitle.
-	description := aDescription.
-	user := aUser.
-	self addTopic: aTopic.
+  description := aDescription.
+  user := aUser.
+  self addTopic: aTopic.
 </pre>
 
 <p>Snippet del código antes de la eliminación del constructor</p>
