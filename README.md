@@ -1,5 +1,5 @@
-# Objetos2-TP3
-<h2>REGISTRO DE BAD SMELLS Y REFACTORING</h2>
+# Objetos2-TP3 g
+<h2>REGISTRO DE BAD SMELLS Y REFACTORING</h2> 
 
 <hr>
 <strong>Vote(class)>>user: aUser likesPublication: aPublication</strong>
