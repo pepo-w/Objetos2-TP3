@@ -12,11 +12,9 @@ Class {
 }
 
 { #category : #'instance creation' }
-Answer class >> new: anAnswer user: aUser question: aQuestion [
+Answer class >> new: aDescription user: aUser question: aQuestion [
 	^ self new
-		description: anAnswer;
-		user: aUser;
-		question: aQuestion;
+		initWithDescription: aDescription user: aUser question: aQuestion;
 		yourself
 ]
 
@@ -30,9 +28,11 @@ Answer >> description [
 	^ description
 ]
 
-{ #category : #private }
-Answer >> description: anObject [
-	description := anObject
+{ #category : #initialization }
+Answer >> initWithDescription: aDescription user: aUser question: aQuestion [
+	description := aDescription.
+	user := aUser.
+	question := aQuestion.
 ]
 
 { #category : #initialize }
@@ -51,29 +51,14 @@ Answer >> positiveVotes [
 	^ votes select: [ :vote | vote isLike ].
 ]
 
-{ #category : #private }
-Answer >> question: aQuestion [
-	question := aQuestion 
-]
-
 { #category : #accessing }
 Answer >> timestamp [
 	^ timestamp
 ]
 
-{ #category : #private }
-Answer >> timestamp: anObject [
-	timestamp := anObject
-]
-
 { #category : #accessing }
 Answer >> user [
 	^ user
-]
-
-{ #category : #private }
-Answer >> user: anObject [
-	user := anObject
 ]
 
 { #category : #accessing }

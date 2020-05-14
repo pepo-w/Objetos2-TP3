@@ -17,9 +17,7 @@ Class {
 { #category : #'instance-creation' }
 User class >> username: aUsername password: aPassword questionRetriever: aQuestionRetriever [
 	^ self new
-		username: aUsername;
-		password: aPassword;
-		questionRetriever: aQuestionRetriever;
+		initWithUsername: aUsername password: aPassword questionRetriever: aQuestionRetriever;
 		yourself
 ]
 
@@ -60,6 +58,13 @@ User >> following [
 	^ following
 ]
 
+{ #category : #initialization }
+User >> initWithUsername: aUsername password: aPassword questionRetriever: aQuestionRetriever [
+	username := aUsername.
+	password := aPassword.
+	questionRetriever := aQuestionRetriever.
+]
+
 { #category : #initialize }
 User >> initialize [
 
@@ -75,19 +80,9 @@ User >> password [
 	^ password
 ]
 
-{ #category : #private }
-User >> password: anObject [
-	password := anObject
-]
-
 { #category : #accessing }
 User >> questionRetriever [
 	^ questionRetriever
-]
-
-{ #category : #private }
-User >> questionRetriever: aQuestionRetriever [
-	questionRetriever := aQuestionRetriever.
 ]
 
 { #category : #accessing }
@@ -108,11 +103,6 @@ User >> topics [
 { #category : #accessing }
 User >> username [
 	^ username
-]
-
-{ #category : #private }
-User >> username: anObject [
-	username := anObject
 ]
 
 { #category : #accessing }

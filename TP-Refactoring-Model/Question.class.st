@@ -14,21 +14,9 @@ Class {
 }
 
 { #category : #'instance creation' }
-Question class >> newWithTitle: title description: aDescription user: aUser [
+Question class >> newWithTitle: aTitle description: aDescription user: aUser topic: aTopic [
 	^ self new
-		title: title;
-		description: aDescription;
-		user: aUser;
-		yourself.
-]
-
-{ #category : #'instance creation' }
-Question class >> newWithTitle: title description: aDescription user: aUser topic: aTopic [
-	^ self new
-		title: title;
-		description: aDescription;
-		addTopic: aTopic;
-		user: aUser;
+		initWithTitle: aTitle description: aDescription user: aUser topic: aTopic;
 		yourself.
 ]
 
@@ -49,9 +37,12 @@ Question >> description [
 	^ description
 ]
 
-{ #category : #private }
-Question >> description: anObject [
-	description := anObject
+{ #category : #initialization }
+Question >> initWithTitle: aTitle description: aDescription user: aUser topic: aTopic [
+	title := aTitle.
+	description := aDescription.
+	user := aUser.
+	self addTopic: aTopic.
 ]
 
 { #category : #'initalize-release' }
@@ -83,19 +74,9 @@ Question >> timestamp [
 	^ timestamp
 ]
 
-{ #category : #private }
-Question >> timestamp: anObject [
-	timestamp := anObject
-]
-
 { #category : #accessing }
 Question >> title [
 	^title 
-]
-
-{ #category : #accessing }
-Question >> title: aTitle [
-	title := aTitle 
 ]
 
 { #category : #accessing }
@@ -106,11 +87,6 @@ Question >> topics [
 { #category : #accessing }
 Question >> user [
 	^ user
-]
-
-{ #category : #private }
-Question >> user: anObject [
-	user := anObject
 ]
 
 { #category : #accessing }
