@@ -110,9 +110,17 @@ En este caso se utilizan los métodos setters en ambos constructores, para inici
     question := Question newWithTitle: 'Question  title' description: 'Question description' user: (User new) topic: (Topic new)
 </pre>
 
+<hr>
+
+<p><em>Bad smell</em>: Codigo duplicado. </p>
+<p> Encontramos que las clases <strong>Answer</strong> y <strong>Question</strong> tienen campos en común (variables: timestamp, description, user y votes) y también responden a los mismos mensajes (#addVote, #positiveVotes, #negativeVotes, y los getters para dichos campos). El código duplicado se encuentra en dichos mensajes, donde se replica exactamente las mismas líneas de código. </p>
+
+<p><em>Refactoring</em>: Extract Superclass, Pull Up Fields, Pull Up Methods, Pull Up Constructor Body</p>
+
+
 
 <hr>
-<strong>Answer>>positiveVotes</strong>
+<strong>Publication>>positiveVotes</strong>
 <pre>
   | r | 
   r := OrderedCollection new. 
@@ -127,7 +135,7 @@ En este caso se utilizan los métodos setters en ambos constructores, para inici
 <pre>  ^ votes select: [ :vote | vote isLike ]. </pre>
 <hr>
 
-<strong>Answer>>negativeVotes</strong>
+<strong>Publication>>negativeVotes</strong>
 <pre>
   | r |
   r := OrderedCollection new.  
