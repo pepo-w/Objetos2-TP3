@@ -1,4 +1,4 @@
-# Objetos2-TP3 g
+# Objetos2-TP3 
 <h2>REGISTRO DE BAD SMELLS Y REFACTORING</h2> 
 
 <hr>
