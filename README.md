@@ -364,6 +364,102 @@ QuestionRetrieverTest>>setUp
 >**Nota**: quedaría refactorizar las subclases de QuestionRetriever (duplicated code, feature envy / innappropiate intimacy, entre otros). Probablemente haya que delegar algunos metodos a User y Cuoora, pero aparte de eso no encuentro otros bad smells en el resto del codigo.
 ____________________________________________________________________
 
+#### *Bad smell*: Duplicated Code
+
+Se observa código duplicado en las siguientes clases:
+
+<pre>
+NewsQuestionRetriever>>retrieveQuestions: aUser
+	| qRet temp newsCol |
+	(...)
+	qRet := temp last: (100 min: temp size).
+	^qRet reject:[:q | q user = aUser].
+</pre>
+
+<pre>
+
+PopularTodayQuestionRetriever>>retrieveQuestions: aUser
+	| qRet temp popularTCol averageVotes |
+	(...)
+	qRet := temp last: (100 min: temp size).
+	^qRet reject:[:q | q user = aUser].
+</pre>
+
+<pre>
+
+SocialQuestionRetriever>>retrieveQuestions: aUser
+	| qRet temp followingCol |
+	(...)
+	qRet := temp last: (100 min: temp size).
+	^qRet reject:[:q | q user = aUser].	
+</pre>
+
+<pre>
+TopicsQuestionRetriever>>retrieveQuestions: aUser
+retrieveQuestions: aUser
+	| qRet temp topicsCol |
+	(...)
+	qRet := temp last: (100 min: temp size).
+	^qRet reject:[:q | q user = aUser].
+</pre>
+
+*Refactoring*: **Form Template Method**
+
+Primero se extrae el código repetido en nu nuevo método, quedando conformado de la siguiente manera:
+
+<pre>
+retrieveQuestionsFor: aUser from: aCollection
+	| qRet |
+	qRet := aCollection last: (100 min: aCollection size).
+	^qRet reject:[:q | q user = aUser].
+</pre>
+
+Este procedimiento se podría realizar en todas las clases anteriormente mencionadas. Al tener todas idéntico funcionamiento, la implementación del mensaje puede estar definida en ***QuestionRetriever***, realizando **Pull Up Method**
+
+<pre>
+QuestionRetriever>>retrieveQuestionsFor: aUser from: aCollection
+	| qRet |
+	qRet := aCollection last: (100 min: aCollection size).
+	^qRet reject:[:q | q user = aUser].
+</pre>
+
+Finalmente, los mensajes de las clases "hijas" de ***QuestionRetriever*** quedarían implementados de la siguiente manera:
+
+<pre>
+NewsQuestionRetriever>>retrieveQuestions: aUser
+	| qRet temp newsCol |
+	(...)
+	^ self retrieveQuestionsFor: aUser from: temp
+</pre>
+
+<pre>
+
+PopularTodayQuestionRetriever>>retrieveQuestions: aUser
+	| qRet temp popularTCol averageVotes |
+	(...)
+	^ self retrieveQuestionsFor: aUser from: temp
+</pre>
+
+<pre>
+
+SocialQuestionRetriever>>retrieveQuestions: aUser
+	| qRet temp followingCol |
+	(...)
+	qRet := temp last: (100 min: temp size).
+	^ self retrieveQuestionsFor: aUser from: temp	
+</pre>
+
+<pre>
+TopicsQuestionRetriever>>retrieveQuestions: aUser
+retrieveQuestions: aUser
+	| qRet temp topicsCol |
+	(...)
+	^ self retrieveQuestionsFor: aUser from: temp
+</pre>
+
+
+____________________________________________________________________
+
 <p><em>Bad smell</em>: Romper encapsulamiento. </p>
 <p>Los valores de las variables de instancia deberian ser seteadas solo cuando son creadas, y no deberían cambiar luego.
 En este caso se utilizan los métodos setters en ambos constructores, para inicializar el objeto. Estos setters luego pueden generear que se rompa el encapsulamiento, modificando por fuera de la propia clase Vote sus atributos. </p>
