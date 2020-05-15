@@ -52,7 +52,7 @@ Answer>>positiveVotes
 	^r
 </pre>
 
->**Nota**: Ademas, alguien me puede explicar porque se llama  **| r |** la variable? No se mencionó eso. Esto es una cita. Hasta luego 
+>**Nota**: Ademas, alguien me puede explicar porque se llama  **| r |** la variable? Poco expresivo.. 
 
 <pre>
 Question>>addVote: aVote
@@ -367,21 +367,35 @@ ____________________________________________________________________
 
 #### *Bad smell*: Duplicated Code
 
-Se observa código duplicado en las siguientes clases:
+En las subclases de **QuestionRetriever** se puede observar que hay código duplicado con algunas particularidades que los diferencian, pero en general los algoritmos siguen los mismos pasos, en el mismo orden:
+1. Obtener una colección de instancias de **Question** relevantes para cada subclase (ya sea desde *aUser* o *cuoora*).
+2. Ordenar dicha colección en forma ascendente según la cantidad de votos positivos de cada instancia.
+3. Filtrar la colección, retornando una colección con las últimas 100 questions que no contenga las questions realizadas por *aUser*.
 
 <pre>
 NewsQuestionRetriever>>retrieveQuestions: aUser
 	| qRet temp newsCol |
-	(...)
+	
+	qRet := OrderedCollection new.	
+	newsCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
+	
+	temp := newsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	
 	qRet := temp last: (100 min: temp size).
 	^qRet reject:[:q | q user = aUser].
 </pre>
 
 <pre>
-
 PopularTodayQuestionRetriever>>retrieveQuestions: aUser
 	| qRet temp popularTCol averageVotes |
-	(...)
+	
+	popularTCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
+	
+	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
+	temp := (popularTCol select:[:q | q positiveVotes size >= averageVotes ]) asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	
 	qRet := temp last: (100 min: temp size).
 	^qRet reject:[:q | q user = aUser].
 </pre>
@@ -390,7 +404,12 @@ PopularTodayQuestionRetriever>>retrieveQuestions: aUser
 
 SocialQuestionRetriever>>retrieveQuestions: aUser
 	| qRet temp followingCol |
-	(...)
+	
+	followingCol := OrderedCollection new.
+	aUser following do:[ :follow | followingCol addAll: follow questions ].
+	
+	temp := followingCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	
 	qRet := temp last: (100 min: temp size).
 	^qRet reject:[:q | q user = aUser].	
 </pre>
@@ -399,14 +418,21 @@ SocialQuestionRetriever>>retrieveQuestions: aUser
 TopicsQuestionRetriever>>retrieveQuestions: aUser
 retrieveQuestions: aUser
 	| qRet temp topicsCol |
-	(...)
+	
+	topicsCol := OrderedCollection new.
+	aUser topics do:[ :topic | topicsCol addAll: topic questions ].
+	
+	temp := topicsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	
 	qRet := temp last: (100 min: temp size).
 	^qRet reject:[:q | q user = aUser].
 </pre>
 
 *Refactoring*: **Form Template Method**
 
-Primero se extrae el código repetido en nu nuevo método, quedando conformado de la siguiente manera:
+Para la aplicación de este refactoring, en primer lugar hacemos **Extract Method** en todas las subclases para cada uno de los pasos mencionados, con un nombre en común que represente la intención del paso.
+
+Primero se extrae el código repetido para el paso 3 en un nuevo método, quedando conformado de la siguiente manera:
 
 <pre>
 retrieveQuestionsFor: aUser from: aCollection
@@ -469,6 +495,121 @@ TopicsQuestionRetriever>>retrieveQuestions: aUser
 </pre>
 >La variable temporal *qRet* ya no es necesaria y se puede quitar de las 4 subclases de ***QuestionRetriever***.
 
+En segundo lugar se extrae el código repetido para el paso 2 en un nuevo método, quedando conformado de la siguiente manera:
+
+<pre>
+sortQuestionsByVotes: aCollection
+	^ aCollection asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
+</pre>
+
+Al igual que en el caso anterior, esta funcionalidad es idéntica para todas las subclases, y por lo tanto realizamos un **Pull Up Method**.
+
+<pre>
+QuestionRetriever>>sortQuestionsByVotes: aCollection
+	^ aCollection asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
+</pre>
+
+Luego de aplicar este refactoring, el método *retrieveQuestions: aUser* quedaría implementado de esta manera en cada una de las subclases:
+
+<pre>
+NewsQuestionRetriever>>retrieveQuestions: aUser
+	| temp newsCol |
+	
+	newsCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
+	temp := self sortQuestionsByVotes: newsCol.
+	^ self retrieveQuestionsFor: aUser from: temp. 
+</pre>
+
+<pre>
+PopularTodayQuestionRetriever>>retrieveQuestions: aUser
+	| temp popularTCol averageVotes |
+	
+	popularTCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
+	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
+	temp := self sortQuestionsByVotes: (popularTCol select:[:q | q positiveVotes size >= averageVotes ]).
+	^ self retrieveQuestionsFor: aUser from: temp. 
+</pre>
+
+<pre>
+SocialQuestionRetriever>>retrieveQuestions: aUser
+	| temp followingCol |
+	
+	followingCol := OrderedCollection new.
+	aUser following do: [ :follow | followingCol addAll: follow questions ].
+	temp := self sortQuestionsByVotes: followingCol.
+	^ self retrieveQuestionsFor: aUser from: temp.
+</pre>
+
+<pre>
+TopicsQuestionRetriever>>retrieveQuestions: aUser
+	| temp topicsCol |
+	
+	topicsCol := OrderedCollection new.
+	aUser topics do: [ :topic | topicsCol addAll: topic questions ].
+	temp := self sortQuestionsByVotes: topicsCol.
+	^ self retrieveQuestionsFor: aUser from: temp
+</pre>
+
+Por último se realiza el **Extract Method** para el paso 1, pero en este caso no se realiza el **Pull Up Method** ya que cada subclase implementa este paso de una forma particular. En cambio, se implementa *getQuestions: aUser* como un método abstracto en la superclase **QuestionRetriever**. A continuación se muestran los snippet del código resultante para cada clase:
+
+<pre>
+NewsQuestionRetriever>>getQuestions: aUser
+	| newsCol |
+	
+	newsCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]]. 
+	^ newsCol
+</pre>
+
+<pre>
+PopularTodayQuestionRetriever>>getQuestions: aUser
+	| popularTCol averageVotes |
+	
+	popularTCol := OrderedCollection new.
+	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]]. 
+	^ (popularTCol select: [:q | q positiveVotes size >= averageVotes ]) 
+</pre>
+
+<pre>
+SocialQuestionRetriever>>getQuestions: aUser
+	| followingCol |
+	
+	followingCol := OrderedCollection new.
+	aUser following do: [ :follow | followingCol addAll: follow questions ].
+	^ followingCol
+</pre>
+
+<pre>
+TopicsQuestionRetriever>>getQuestions: aUser
+	| topicsCol |
+	
+	topicsCol := OrderedCollection new.
+	aUser topics do: [ :topic | topicsCol addAll: topic questions ].
+	^ topicsCol
+</pre>
+
+<pre>
+QuestionRetriever(Abstract)>>getQuestions: aUser
+	^ self subclassResponsibility.
+</pre>
+
+>**Nota**: Se puede observar que en las clases **NewsQuestionRetriever** y **PopularTodayQuestionRetriever** se recibe un parámetro *aUser* pero no se utiliza en el método. En general, para estos casos se utiliza el refactoring **Remove Parameter**, pero este es un caso particular en el que nos interesa crear un metodo template que sea implementado de la misma forma por todas las subclases, y por lo tanto los nombres de los métodos deben ser iguales para todas (incluyendo los parametros).
+
+Luego de realizar estos refactoring, nos encontramos con que el método *RetrieveQuestions: aUser* es idéntico en todas las subclases (la única diferencia es el nombre de una variable local). Procedemos a hacer un **Pull Up Method**, modificando el nombre de la variable local para que tenga un caracter más genérico, y se elimina el método de las subclases para que utilicen el de la superclase.
+
+<pre>
+QuestionRetriever>>retrieveQuestions: aUser
+	| temp aCollection |
+
+	aCollection := self getQuestions: aUser. 
+	temp := self sortQuestionsByVotes: aCollection.
+	^ self retrieveQuestionsFor: aUser from: temp. 
+</pre>
+
+De esta manera, queda formado un metodo template que generaliza los pasos del algoritmo, e implementa el código que comparten las subclases de **QuestionRetriever**. A su vez cada subclase implementa sus funcionalidades particulares.
 ____________________________________________________________________
 
 <p><em>Bad smell</em>: Romper encapsulamiento. </p>
