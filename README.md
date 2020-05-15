@@ -428,33 +428,43 @@ Finalmente, los mensajes de las clases "hijas" de ***QuestionRetriever*** quedar
 <pre>
 NewsQuestionRetriever>>retrieveQuestions: aUser
 	| temp newsCol |
-	(...)
-	^ self retrieveQuestionsFor: aUser from: temp
+
+	newsCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
+	temp := newsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	^ self retrieveQuestionsFor: aUser from: temp. 
 </pre>
 
 <pre>
-
 PopularTodayQuestionRetriever>>retrieveQuestions: aUser
 	| temp popularTCol averageVotes |
-	(...)
-	^ self retrieveQuestionsFor: aUser from: temp
+	
+	popularTCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
+	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
+	temp := (popularTCol select:[:q | q positiveVotes size >= averageVotes ]) 
+			asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	^ self retrieveQuestionsFor: aUser from: temp. 
 </pre>
 
 <pre>
-
 SocialQuestionRetriever>>retrieveQuestions: aUser
 	| temp followingCol |
-	(...)
-	qRet := temp last: (100 min: temp size).
-	^ self retrieveQuestionsFor: aUser from: temp	
+	
+	followingCol := OrderedCollection new.
+	aUser following do:[ :follow | followingCol addAll: follow questions ].
+	temp := followingCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	^ self retrieveQuestionsFor: aUser from: temp. 
 </pre>
 
 <pre>
 TopicsQuestionRetriever>>retrieveQuestions: aUser
-retrieveQuestions: aUser
 	| temp topicsCol |
-	(...)
-	^ self retrieveQuestionsFor: aUser from: temp
+	
+	topicsCol := OrderedCollection new.
+	aUser topics do:[ :topic | topicsCol addAll: topic questions ].
+	temp := topicsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	^ self retrieveQuestionsFor: aUser from: temp. 
 </pre>
 >La variable temporal *qRet* ya no es necesaria y se puede quitar de las 4 subclases de ***QuestionRetriever***.
 
