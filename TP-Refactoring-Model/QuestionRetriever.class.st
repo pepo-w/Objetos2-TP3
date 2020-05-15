@@ -18,7 +18,7 @@ QuestionRetriever >> cuoora: aCuooraInstance [
 ]
 
 { #category : #retrieving }
-QuestionRetriever >> getQuestions: aUser [
+QuestionRetriever >> getQuestionsFor: aUser [
 	^ self subclassResponsibility.
 ]
 
@@ -26,7 +26,7 @@ QuestionRetriever >> getQuestions: aUser [
 QuestionRetriever >> retrieveQuestions: aUser [
 	| temp aCollection |
 
-	aCollection := self getQuestions: aUser. 
+	aCollection := self getQuestionsFor: aUser. 
 	temp := self sortQuestionsByVotes: aCollection.
 	^ self retrieveQuestionsFor: aUser from: temp. 
 ]

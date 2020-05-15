@@ -5,7 +5,7 @@ Class {
 }
 
 { #category : #retrieving }
-NewsQuestionRetriever >> getQuestions: aUser [
+NewsQuestionRetriever >> getQuestionsFor: aUser [
 	| newsCol |
 	newsCol := OrderedCollection new.
 	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]]. "cuooraTodayQuestions"

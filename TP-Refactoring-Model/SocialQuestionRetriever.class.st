@@ -5,7 +5,7 @@ Class {
 }
 
 { #category : #retrieving }
-SocialQuestionRetriever >> getQuestions: aUser [
+SocialQuestionRetriever >> getQuestionsFor: aUser [
 	| followingCol |
 	
 	followingCol := OrderedCollection new.
