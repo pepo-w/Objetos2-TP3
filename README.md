@@ -367,7 +367,10 @@ ____________________________________________________________________
 
 #### *Bad smell*: Duplicated Code
 
-Se observa código duplicado en las siguientes clases:
+En las subclases de **QuestionRetriever** se puede observar que hay código duplicado con algunas particularidades que los diferencian, pero en general los algoritmos siguen los mismos pasos, en el mismo orden:
+1. Obtener una colección de instancias de **Question** relevantes para cada subclase (ya sea desde *aUser* o *cuoora*).
+2. Ordenar dicha colección en forma ascendente según la cantidad de votos positivos de cada instancia.
+3. Filtrar la colección, retornando una colección con las últimas 100 questions que no contenga las questions realizadas por *aUser*.
 
 <pre>
 NewsQuestionRetriever>>retrieveQuestions: aUser
@@ -427,7 +430,9 @@ retrieveQuestions: aUser
 
 *Refactoring*: **Form Template Method**
 
-Primero se extrae el código repetido en nu nuevo método, quedando conformado de la siguiente manera:
+Para la aplicación de este refactoring, en primer lugar hacemos **Extract Method** en todas las subclases para cada uno de los pasos mencionados, con un nombre que represente la intención del paso.
+
+Primero se extrae el código repetido para el paso 3 en un nuevo método, quedando conformado de la siguiente manera:
 
 <pre>
 retrieveQuestionsFor: aUser from: aCollection
@@ -489,6 +494,9 @@ TopicsQuestionRetriever>>retrieveQuestions: aUser
 	^ self retrieveQuestionsFor: aUser from: temp. 
 </pre>
 >La variable temporal *qRet* ya no es necesaria y se puede quitar de las 4 subclases de ***QuestionRetriever***.
+
+En segundo lugar se extrae el código repetido para el paso 1 en un nuevo método, quedando conformado de la siguiente manera:
+
 
 ____________________________________________________________________
 
