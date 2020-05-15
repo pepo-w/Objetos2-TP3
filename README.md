@@ -266,7 +266,7 @@ QuestionRetriever subclass: #PopularTodayQuestionRetriever
 2. *Refactoring*: **Replace Conditional With Polymorphism**.
 
 A continuación tomamos el código correspondiente a cada una de las subclases que se encuentra en los condicionales de *QuestionRetriever>>retrieveQuestions: aUser*, y utilizando **Extract Method** junto con **Move Method** implementamos los mensajes en las subclases. Para cada subclase se utilizarán sólo las variables temporales necesarias, y se incluye el retorno del método <code>^qRet reject:[:q | q user = aUser].</code> , que es común para todas las subclases.
-Una vez que el método se encuentra redefinido por todas las subclases, modificamos el método en la superclase para que el mismo sea abstracto.
+Una vez que el método se encuentra redefinido por todas las subclases, modificamos el método en la superclase para que el mismo sea abstracto. (ahora la clase **QuestionRetriever** pasa a ser Abstracta)
 
 <pre>
 SocialQuestionRetriever>>retrieveQuestions: aUser
