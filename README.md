@@ -147,7 +147,7 @@ Question>>initialize
 	answers := OrderedCollection new.
 	topics := OrderedCollection new.
 </pre>
->Se ve como **Question** realiza un *LookUp* hacia la superclase para inicializar por defecto *votes* y *timestamp*, para luego inicializar sus atributos particulares. Por su parte, **Answer** ya no necesita en su propia clase *>>initialize*.
+>Se ve como **Question** realiza un *LookUp* hacia la superclase para inicializar por defecto *votes* y *timestamp*, para luego inicializar sus atributos particulares. Por su parte, **Answer** ya no necesita en su propio *>>initialize*.
 ________________________________________________________
 
 <p><em>Bad smell</em>: Romper encapsulamiento. </p>
