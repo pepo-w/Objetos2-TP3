@@ -552,10 +552,10 @@ TopicsQuestionRetriever>>retrieveQuestions: aUser
 	^ self retrieveQuestionsFor: aUser from: temp
 </pre>
 
-Por último se realiza el **Extract Method** para el paso 1, pero en este caso no se realiza el **Pull Up Method** ya que cada subclase implementa este paso de una forma particular. En cambio, se implementa *getQuestions: aUser* como un método abstracto en la superclase **QuestionRetriever**. A continuación se muestran los snippet del código resultante para cada clase:
+Por último se realiza el **Extract Method** para el paso 1, pero en este caso no se realiza el **Pull Up Method** ya que cada subclase implementa este paso de una forma particular. En cambio, se implementa *getQuestionsFor: aUser* como un método abstracto en la superclase **QuestionRetriever**. A continuación se muestran los snippet del código resultante para cada clase:
 
 <pre>
-NewsQuestionRetriever>>getQuestions: aUser
+NewsQuestionRetriever>>getQuestionsFor: aUser
 	| newsCol |
 	
 	newsCol := OrderedCollection new.
@@ -564,7 +564,7 @@ NewsQuestionRetriever>>getQuestions: aUser
 </pre>
 
 <pre>
-PopularTodayQuestionRetriever>>getQuestions: aUser
+PopularTodayQuestionRetriever>>getQuestionsFor: aUser
 	| popularTCol averageVotes |
 	
 	popularTCol := OrderedCollection new.
@@ -574,7 +574,7 @@ PopularTodayQuestionRetriever>>getQuestions: aUser
 </pre>
 
 <pre>
-SocialQuestionRetriever>>getQuestions: aUser
+SocialQuestionRetriever>>getQuestionsFor: aUser
 	| followingCol |
 	
 	followingCol := OrderedCollection new.
@@ -583,7 +583,7 @@ SocialQuestionRetriever>>getQuestions: aUser
 </pre>
 
 <pre>
-TopicsQuestionRetriever>>getQuestions: aUser
+TopicsQuestionRetriever>>getQuestionsFor: aUser
 	| topicsCol |
 	
 	topicsCol := OrderedCollection new.
@@ -592,7 +592,7 @@ TopicsQuestionRetriever>>getQuestions: aUser
 </pre>
 
 <pre>
-QuestionRetriever(Abstract)>>getQuestions: aUser
+QuestionRetriever(Abstract)>>getQuestionsFor: aUser
 	^ self subclassResponsibility.
 </pre>
 
@@ -604,7 +604,7 @@ Luego de realizar estos refactoring, nos encontramos con que el método *Retriev
 QuestionRetriever>>retrieveQuestions: aUser
 	| temp aCollection |
 
-	aCollection := self getQuestions: aUser. 
+	aCollection := self getQuestionsFor: aUser. 
 	temp := self sortQuestionsByVotes: aCollection.
 	^ self retrieveQuestionsFor: aUser from: temp. 
 </pre>
