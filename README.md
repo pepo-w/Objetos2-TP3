@@ -233,9 +233,9 @@ QuestionRetriever>>retrieveQuestions: aUser
 	^qRet reject:[:q | q user = aUser].
 </pre>
 
-*Refactoring*: **Replace Type Code With Subclasses**.
+1. *Refactoring*: **Replace Type Code With Subclasses**.
 
->Type Code: se utiliza una serie de símbolos (*#social, #topics, #news, #popularToday*) como los valores permitidos de la variable de instancia *-option*. Estos símbolos afectan directamente el comportamiento del método (se evalúa *-option* en los condicionales).
+Type Code: se utiliza una serie de símbolos (*#social, #topics, #news, #popularToday*) como los valores permitidos de la variable de instancia *-option*. Estos símbolos afectan directamente el comportamiento del método (se evalúa *-option* en los condicionales).
 
 En primer lugar creamos una subclase de **QuestionRetriever** por cada uno de los símbolos mencionados.
 
@@ -263,7 +263,10 @@ QuestionRetriever subclass: #PopularTodayQuestionRetriever
 	classVariableNames: ''
 </pre>
 
-A continuación aplicamos el refactoring **Replace Conditional With Polymorphism**, de manera que las subclases implementen el método *#retrieveQuestions: aUser* (con el código de sus respectivos condicionales: **Extract Method**), mientras que en la superclase este método pasa a ser abstracto. Para cada subclase se utilizarán sólo las variables temporales necesarias, y se incluye el retorno del método <code>^qRet reject:[:q | q user = aUser].</code> , que es común para todas las subclases.
+2. *Refactoring*: **Replace Conditional With Polymorphism**.
+
+A continuación tomamos el código correspondiente a cada una de las subclases que se encuentra en los condicionales de *QuestionRetriever>>retrieveQuestions: aUser*, y utilizando **Extract Method** junto con **Move Method** implementamos los mensajes en las subclases. Para cada subclase se utilizarán sólo las variables temporales necesarias, y se incluye el retorno del método <code>^qRet reject:[:q | q user = aUser].</code> , que es común para todas las subclases.
+Una vez que el método se encuentra redefinido por todas las subclases, modificamos el método en la superclase para que el mismo sea abstracto.
 
 <pre>
 SocialQuestionRetriever>>retrieveQuestions: aUser
@@ -323,7 +326,7 @@ QuestionRetriever(Abstract)>>retrieveQuestions: aUser
 	^ self subclassResponsibility.
 </pre>
 
-Es claro que ya no es necesario el uso de los símbolos y condicionales, gracias al polimorfismo, y por lo tanto la variable de instancia *-option* que ahora heredan las subclases ya no se utiliza. Tanto la variable como su setter *#option: anOption*, tienen olor a **Dead Code** (por el hecho de que ya no se utilizan), y en consecuencia *#initialize* y uno de los constructores dejan de tener sentido.
+Es claro que ya no es necesario el uso de los símbolos y condicionales, gracias a la implementación de polimorfismo, y por lo tanto la variable de instancia *-option* que ahora heredan las subclases ya no se utiliza. Tanto la variable como su setter *#option: anOption*, tienen olor a **Dead Code** (por el hecho de que ya no se usan), y en consecuencia *#initialize* y uno de los constructores dejan de tener sentido.
 
 <pre>
 QuestionRetriever>>initialize
@@ -360,8 +363,6 @@ QuestionRetrieverTest>>setUp
    popularTodayRetriever := PopularTodayQuestionRetriever new: cuoora.
 </pre>
 
-
->**Nota**: quedaría refactorizar las subclases de QuestionRetriever (duplicated code, feature envy / innappropiate intimacy, entre otros). Probablemente haya que delegar algunos metodos a User y Cuoora, pero aparte de eso no encuentro otros bad smells en el resto del codigo.
 ____________________________________________________________________
 
 #### *Bad smell*: Duplicated Code
