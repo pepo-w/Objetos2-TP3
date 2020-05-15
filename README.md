@@ -552,81 +552,64 @@ TopicsQuestionRetriever>>retrieveQuestions: aUser
 	^ self retrieveQuestionsFor: aUser from: temp
 </pre>
 
-Por último se realiza el **Extract Method** para el paso 1, pero en este caso no se realiza el **Pull Up Method** ya que cada subclase implementa este paso de una forma particular. A continuación se muestran los snippet del código resultante para cada subclase:
+Por último se realiza el **Extract Method** para el paso 1, pero en este caso no se realiza el **Pull Up Method** ya que cada subclase implementa este paso de una forma particular. En cambio, se implementa *getQuestions: aUser* como un método abstracto en la superclase **QuestionRetriever**. A continuación se muestran los snippet del código resultante para cada clase:
 
 <pre>
-NewsQuestionRetriever>>getQuestionsFrom: aCollection
+NewsQuestionRetriever>>getQuestions: aUser
 	| newsCol |
 	
 	newsCol := OrderedCollection new.
-	aCollection do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]]. 
 	^ newsCol
 </pre>
 
 <pre>
-NewsQuestionRetriever>>retrieveQuestions: aUser
-	| temp newsCol |
-
-	newsCol := self getQuestionsFrom: cuoora questions.
-	temp := self sortQuestionsByVotes: newsCol.
-	^ self retrieveQuestionsFor: aUser from: temp. 
-</pre>
-
-<pre>
-PopularTodayQuestionRetriever>>getQuestionsFrom: aCollection
-	| popularTCol |
+PopularTodayQuestionRetriever>>getQuestions: aUser
+	| popularTCol averageVotes |
 	
 	popularTCol := OrderedCollection new.
-	aCollection do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
-	^ popularTCol
-</pre>
-
-<pre>
-PopularTodayQuestionRetriever>>retrieveQuestions: aUser
-	| temp popularTCol averageVotes |
-	
-	popularTCol := self getQuestionsFrom: cuoora questions. 
-	
 	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
-	temp := self sortQuestionsByVotes: (popularTCol select:[:q | q positiveVotes size >= averageVotes ]).
-	^ self retrieveQuestionsFor: aUser from: temp. 
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]]. 
+	^ (popularTCol select: [:q | q positiveVotes size >= averageVotes ]) 
 </pre>
 
 <pre>
-SocialQuestionRetriever>>getQuestionsFrom: aCollection
+SocialQuestionRetriever>>getQuestions: aUser
 	| followingCol |
 	
 	followingCol := OrderedCollection new.
-	aCollection do: [ :follow | followingCol addAll: follow questions ].
+	aUser following do: [ :follow | followingCol addAll: follow questions ].
 	^ followingCol
 </pre>
 
 <pre>
-SocialQuestionRetriever>>retrieveQuestions: aUser
-	| temp followingCol |
-	
-	followingCol := self getQuestionsFrom: aUser following.
-	temp := self sortQuestionsByVotes: followingCol.
-	^ self retrieveQuestionsFor: aUser from: temp.
-</pre>
-
-<pre>
-TopicsQuestionRetriever>>getQuestionsFrom: aCollection
+TopicsQuestionRetriever>>getQuestions: aUser
 	| topicsCol |
 	
 	topicsCol := OrderedCollection new.
-	aCollection do: [ :topic | topicsCol addAll: topic questions ].
+	aUser topics do: [ :topic | topicsCol addAll: topic questions ].
 	^ topicsCol
 </pre>
 
 <pre>
-TopicsQuestionRetriever>>retrieveQuestions: aUser
-	| temp topicsCol |
-	
-	topicsCol := self getQuestionsFrom: aUser topics.
-	temp := self sortQuestionsByVotes: topicsCol.
-	^ self retrieveQuestionsFor: aUser from: temp
+QuestionRetriever(Abstract)>>getQuestions: aUser
+	^ self subclassResponsibility.
 </pre>
+
+>**Nota**: Se puede observar que en las clases **NewsQuestionRetriever** y **PopularTodayQuestionRetriever** se recibe un parámetro *aUser* pero no se utiliza en el método. En general, para estos casos se utiliza el refactoring **Remove Parameter**, pero este es un caso particular en el que nos interesa crear un metodo template que sea implementado de la misma forma por todas las subclases, y por lo tanto los nombres de los métodos deben ser iguales para todas (incluyendo los parametros).
+
+Luego de realizar estos refactoring, nos encontramos con que el método *RetrieveQuestions: aUser* es idéntico en todas las subclases (la única diferencia es el nombre de una variable local). Procedemos a hacer un **Pull Up Method**, modificando el nombre de la variable local para que tenga un caracter más genérico, y se elimina el método de las subclases para que utilicen el de la superclase.
+
+<pre>
+QuestionRetriever>>retrieveQuestions: aUser
+	| temp aCollection |
+
+	aCollection := self getQuestions: aUser. 
+	temp := self sortQuestionsByVotes: aCollection.
+	^ self retrieveQuestionsFor: aUser from: temp. 
+</pre>
+
+De esta manera, queda formado un metodo template que generaliza los pasos del algoritmo, e implementa el código que comparten las subclases de **QuestionRetriever**. A su vez cada subclase implementa sus funcionalidades particulares.
 ____________________________________________________________________
 
 <p><em>Bad smell</em>: Romper encapsulamiento. </p>
