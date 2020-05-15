@@ -495,7 +495,19 @@ TopicsQuestionRetriever>>retrieveQuestions: aUser
 </pre>
 >La variable temporal *qRet* ya no es necesaria y se puede quitar de las 4 subclases de ***QuestionRetriever***.
 
-En segundo lugar se extrae el código repetido para el paso 1 en un nuevo método, quedando conformado de la siguiente manera:
+En segundo lugar se extrae el código repetido para el paso 2 en un nuevo método, quedando conformado de la siguiente manera:
+
+<pre>
+sortQuestionsByVotes: aCollection
+	^ aCollection asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
+</pre>
+
+Al igual que en el caso anterior, esta funcionalidad es idéntica para todas las subclases, y por lo tanto realizamos un **Pull Up Method**.
+
+<pre>
+QuestionRetriever>>sortQuestionsByVotes: aCollection
+	^ aCollection asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
+</pre>
 
 
 ____________________________________________________________________
