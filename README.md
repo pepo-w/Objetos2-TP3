@@ -568,8 +568,8 @@ PopularTodayQuestionRetriever>>getQuestionsFor: aUser
 	| popularTCol averageVotes |
 	
 	popularTCol := OrderedCollection new.
-	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
-	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]]. 
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
+	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size. 
 	^ (popularTCol select: [:q | q positiveVotes size >= averageVotes ]) 
 </pre>
 
