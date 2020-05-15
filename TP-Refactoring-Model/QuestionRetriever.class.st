@@ -21,3 +21,11 @@ QuestionRetriever >> cuoora: aCuooraInstance [
 QuestionRetriever >> retrieveQuestions: aUser [
 	^ self subclassResponsibility.
 ]
+
+{ #category : #'as yet unclassified' }
+QuestionRetriever >> retrieveQuestionsFor: aUser from: aCollection [
+	| qRet |
+	
+	qRet := aCollection last: (100 min: aCollection size).
+	^qRet reject:[:q | q user = aUser].
+]
