@@ -427,7 +427,7 @@ Finalmente, los mensajes de las clases "hijas" de ***QuestionRetriever*** quedar
 
 <pre>
 NewsQuestionRetriever>>retrieveQuestions: aUser
-	| qRet temp newsCol |
+	| temp newsCol |
 	(...)
 	^ self retrieveQuestionsFor: aUser from: temp
 </pre>
@@ -435,7 +435,7 @@ NewsQuestionRetriever>>retrieveQuestions: aUser
 <pre>
 
 PopularTodayQuestionRetriever>>retrieveQuestions: aUser
-	| qRet temp popularTCol averageVotes |
+	| temp popularTCol averageVotes |
 	(...)
 	^ self retrieveQuestionsFor: aUser from: temp
 </pre>
@@ -443,7 +443,7 @@ PopularTodayQuestionRetriever>>retrieveQuestions: aUser
 <pre>
 
 SocialQuestionRetriever>>retrieveQuestions: aUser
-	| qRet temp followingCol |
+	| temp followingCol |
 	(...)
 	qRet := temp last: (100 min: temp size).
 	^ self retrieveQuestionsFor: aUser from: temp	
@@ -452,11 +452,11 @@ SocialQuestionRetriever>>retrieveQuestions: aUser
 <pre>
 TopicsQuestionRetriever>>retrieveQuestions: aUser
 retrieveQuestions: aUser
-	| qRet temp topicsCol |
+	| temp topicsCol |
 	(...)
 	^ self retrieveQuestionsFor: aUser from: temp
 </pre>
-
+>La variable temporal *qRet* ya no es necesaria y se puede quitar de las 4 subclases de ***QuestionRetriever***.
 
 ____________________________________________________________________
 
