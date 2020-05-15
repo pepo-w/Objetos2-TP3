@@ -52,7 +52,7 @@ Answer>>positiveVotes
 	^r
 </pre>
 
->**Nota**: Ademas, alguien me puede explicar porque se llama  **| r |** la variable? No se mencionó eso. Esto es una cita. Hasta luego 
+>**Nota**: Ademas, alguien me puede explicar porque se llama  **| r |** la variable? Poco expresivo.. 
 
 <pre>
 Question>>addVote: aVote
@@ -372,16 +372,27 @@ Se observa código duplicado en las siguientes clases:
 <pre>
 NewsQuestionRetriever>>retrieveQuestions: aUser
 	| qRet temp newsCol |
-	(...)
+	
+	qRet := OrderedCollection new.	
+	newsCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
+	
+	temp := newsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	
 	qRet := temp last: (100 min: temp size).
 	^qRet reject:[:q | q user = aUser].
 </pre>
 
 <pre>
-
 PopularTodayQuestionRetriever>>retrieveQuestions: aUser
 	| qRet temp popularTCol averageVotes |
-	(...)
+	
+	popularTCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
+	
+	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
+	temp := (popularTCol select:[:q | q positiveVotes size >= averageVotes ]) asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	
 	qRet := temp last: (100 min: temp size).
 	^qRet reject:[:q | q user = aUser].
 </pre>
@@ -390,7 +401,12 @@ PopularTodayQuestionRetriever>>retrieveQuestions: aUser
 
 SocialQuestionRetriever>>retrieveQuestions: aUser
 	| qRet temp followingCol |
-	(...)
+	
+	followingCol := OrderedCollection new.
+	aUser following do:[ :follow | followingCol addAll: follow questions ].
+	
+	temp := followingCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	
 	qRet := temp last: (100 min: temp size).
 	^qRet reject:[:q | q user = aUser].	
 </pre>
@@ -399,7 +415,12 @@ SocialQuestionRetriever>>retrieveQuestions: aUser
 TopicsQuestionRetriever>>retrieveQuestions: aUser
 retrieveQuestions: aUser
 	| qRet temp topicsCol |
-	(...)
+	
+	topicsCol := OrderedCollection new.
+	aUser topics do:[ :topic | topicsCol addAll: topic questions ].
+	
+	temp := topicsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	
 	qRet := temp last: (100 min: temp size).
 	^qRet reject:[:q | q user = aUser].
 </pre>
