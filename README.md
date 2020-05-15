@@ -430,7 +430,7 @@ retrieveQuestions: aUser
 
 *Refactoring*: **Form Template Method**
 
-Para la aplicación de este refactoring, en primer lugar hacemos **Extract Method** en todas las subclases para cada uno de los pasos mencionados, con un nombre que represente la intención del paso.
+Para la aplicación de este refactoring, en primer lugar hacemos **Extract Method** en todas las subclases para cada uno de los pasos mencionados, con un nombre en común que represente la intención del paso.
 
 Primero se extrae el código repetido para el paso 3 en un nuevo método, quedando conformado de la siguiente manera:
 
