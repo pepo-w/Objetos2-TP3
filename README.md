@@ -191,6 +191,179 @@ Con este *refactoring* se gana legibilidad y se expresa la intención del códig
 
 ____________________________________________________________________
 
+#### *Bad smell*: Switch Statements
+
+Analizando el método *#retrieveQuestions: aUser* de la clase **QuestionRetriever**, observamos que el código consiste principalmente en una secuencia de "if option = #symbol", y en cada caso realiza una serie de operaciones para retornar una colección de instancias de Question (según distintos criterios). Esto se considera una mala práctica en OO, ya que puede obtenerse el mismo funcionamiento aplicando polimorfismo. 
+
+>**Nota:** También consideramos que el método presenta el bad smell **Long Method**, que quedará resuelto luego de aplicar el refactoring para Switch Statements. 
+
+<pre>
+QuestionRetriever>>retrieveQuestions: aUser
+	| qRet temp followingCol topicsCol newsCol popularTCol averageVotes|
+	qRet := OrderedCollection new.
+	option = #social ifTrue:[
+			followingCol := OrderedCollection new.
+			aUser following do:[ :follow | followingCol addAll: follow questions ].
+			temp := followingCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+			qRet := temp last: (100 min: temp size).
+		].
+
+	option = #topics ifTrue:[
+			topicsCol := OrderedCollection new.
+			aUser topics do:[ :topic | topicsCol addAll: topic questions ].
+			temp := topicsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+			qRet := temp last: (100 min: temp size).
+		].
+	
+	option = #news ifTrue:[
+			newsCol := OrderedCollection new.
+			cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
+			temp := newsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+			qRet := temp last: (100 min: temp size).
+		].
+
+	option = #popularToday ifTrue:[
+			popularTCol := OrderedCollection new.
+			cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
+			averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
+			temp := (popularTCol select:[:q | q positiveVotes size >= averageVotes ]) asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+			qRet := temp last: (100 min: temp size).
+		].
+	
+	^qRet reject:[:q | q user = aUser].
+</pre>
+
+*Refactoring*: **Replace Type Code With Subclasses**.
+
+>Type Code: se utiliza una serie de símbolos (*#social, #topics, #news, #popularToday*) como los valores permitidos de la variable de instancia *-option*. Estos símbolos afectan directamente el comportamiento del método (se evalúa *-option* en los condicionales).
+
+En primer lugar creamos una subclase de **QuestionRetriever** por cada uno de los símbolos mencionados.
+
+<pre>
+QuestionRetriever subclass: #SocialQuestionRetriever
+	instanceVariableNames: ''
+	classVariableNames: ''
+</pre>
+
+<pre>
+QuestionRetriever subclass: #TopicsQuestionRetriever
+	instanceVariableNames: ''
+	classVariableNames: ''
+</pre>
+
+<pre>
+QuestionRetriever subclass: #NewsQuestionRetriever
+	instanceVariableNames: ''
+	classVariableNames: ''
+</pre>
+
+<pre>
+QuestionRetriever subclass: #PopularTodayQuestionRetriever
+	instanceVariableNames: ''
+	classVariableNames: ''
+</pre>
+
+A continuación aplicamos el refactoring **Replace Conditional With Polymorphism**, de manera que las subclases implementen el método *#retrieveQuestions: aUser* (con el código de sus respectivos condicionales: **Extract Method**), mientras que en la superclase este método pasa a ser abstracto. Para cada subclase se utilizarán sólo las variables temporales necesarias, y se incluye el retorno del método (<code>^qRet reject:[:q | q user = aUser].</code>), que es común para todas las subclases.
+
+<pre>
+SocialQuestionRetriever>>retrieveQuestions: aUser
+	| qRet temp followingCol |
+	
+	qRet := OrderedCollection new.
+	followingCol := OrderedCollection new.
+	aUser following do:[ :follow | followingCol addAll: follow questions ].
+	temp := followingCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	qRet := temp last: (100 min: temp size).
+	
+	^qRet reject:[:q | q user = aUser].
+</pre>
+
+<pre>
+TopicsQuestionRetriever>>retrieveQuestions: aUser
+	| qRet temp topicsCol |
+	
+	qRet := OrderedCollection new.
+	topicsCol := OrderedCollection new.
+	aUser topics do:[ :topic | topicsCol addAll: topic questions ].
+	temp := topicsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	qRet := temp last: (100 min: temp size).
+	
+	^qRet reject:[:q | q user = aUser].
+</pre>
+
+<pre>
+NewsQuestionRetriever>>retrieveQuestions: aUser
+	| qRet temp newsCol |
+
+	qRet := OrderedCollection new.	
+	newsCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
+	temp := newsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	qRet := temp last: (100 min: temp size).
+	
+	^qRet reject:[:q | q user = aUser].
+</pre>
+
+<pre>
+PopularTodayQuestionRetriever>>retrieveQuestions: aUser
+	| qRet temp popularTCol averageVotes |
+	
+	qRet := OrderedCollection new.
+	popularTCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
+	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
+	temp := (popularTCol select:[:q | q positiveVotes size >= averageVotes ]) asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	qRet := temp last: (100 min: temp size).
+	
+	^qRet reject:[:q | q user = aUser].
+</pre>
+
+<pre>
+QuestionRetriever(Abstract)>>retrieveQuestions: aUser
+	^ self subclassResponsibility.
+</pre>
+
+Es claro que ya no es necesario el uso de los símbolos y condicionales, gracias al polimorfismo, y por lo tanto la variable de instancia *-option* que ahora heredan las subclases ya no se utiliza. Tanto la variable como su setter *#option: anOption*, tienen olor a **Dead Code** (por el hecho de que ya no se utilizan), y en consecuencia *#initialize* y uno de los constructores dejan de tener sentido.
+
+<pre>
+QuestionRetriever>>initialize
+	option := #social
+</pre>
+
+<pre>
+QuestionRetriever(Class side)>>new: cuoora and: aSymbol
+	^ self new cuoora: cuoora; option:aSymbol; yourself.
+</pre>
+
+Para este refactoring simplemente eliminamos la variable *-option* y los métodos mencionados. 
+Al ejecutar los tests correspondientes luego del refactoring, encontramos que los test fallaron dado que el constructor eliminado era utilizado en el setUp:
+
+<pre>
+QuestionRetrieverTest>>setUp
+	(...)
+  
+   socialRetriever := QuestionRetriever new: cuoora and: #social.
+   topicsRetriever := QuestionRetriever new: cuoora and: #topics.
+   newsRetriever := QuestionRetriever new: cuoora and: #news.
+   popularTodayRetriever := QuestionRetriever new: cuoora and: #popularToday.
+</pre>
+
+Para solucionar esto sin modificar la funcionalidad del test, reescribimos el código para que se instancie, en cada caso, un objeto de las subclases de QuestionRetriever (que al ser abstracta sería incorrecto instanciar). Luego comprobamos que los test pasen sin errores.
+
+<pre>
+QuestionRetrieverTest>>setUp
+	(...)
+ 
+   socialRetriever := SocialQuestionRetriever new: cuoora.
+   topicsRetriever := TopicsQuestionRetriever new: cuoora.
+   newsRetriever := NewsQuestionRetriever new: cuoora.
+   popularTodayRetriever := PopularTodayQuestionRetriever new: cuoora.
+</pre>
+
+
+>**Nota**: quedaría refactorizar las subclases de QuestionRetriever (duplicated code, feature envy / innappropiate intimacy, entre otros). Probablemente haya que delegar algunos metodos a User y Cuoora, pero aparte de eso no encuentro otros bad smells en el resto del codigo.
+____________________________________________________________________
+
 <p><em>Bad smell</em>: Romper encapsulamiento. </p>
 <p>Los valores de las variables de instancia deberian ser seteadas solo cuando son creadas, y no deberían cambiar luego.
 En este caso se utilizan los métodos setters en ambos constructores, para inicializar el objeto. Estos setters luego pueden generear que se rompa el encapsulamiento, modificando por fuera de la propia clase Vote sus atributos. </p>
