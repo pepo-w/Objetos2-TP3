@@ -1,5 +1,154 @@
 # Objetos2-TP3 
-<h2>REGISTRO DE BAD SMELLS Y REFACTORING</h2> 
+## REGISTRO DE BAD SMELLS Y REFACTORING
+#### *Bad smell*: Duplicated Code 
+
+Encontramos que las clases **Answer** y **Question** tienen campos en común (variables de instancia: *timestamp, description, user* y *votes*) y también ambas clases responden a los mensajes *#addVote:, #positiveVotes, #negativeVotes*, con idéntica funcionalidad.
+
+<pre>
+Object subclass: #Question
+	instanceVariableNames: 'title answers topics timestamp user votes description'
+	classVariableNames: ''
+	package: 'TP-Refactoring-Model'
+</pre>
+
+<pre>
+Object subclass: #Answer
+	instanceVariableNames: 'question timestamp user votes description'
+	classVariableNames: ''
+	package: 'TP-Refactoring-Model'
+</pre>
+>En las definiciones de clase se observan atributos en común
+
+También se observa redundancia en los métodos:
+<pre>
+ Question>>negativeVotes
+	| r |
+	r := OrderedCollection new.
+	votes do:[:vote | vote isLike ifFalse:[r add: vote]].
+	^r
+</pre>
+
+<pre>
+Answer>>negativeVotes
+	| r |
+	r := OrderedCollection new.
+	votes do:[:vote | vote isLike ifFalse:[r add: vote]].
+	^r
+</pre>
+
+<pre>
+Question>>positiveVotes
+	| r |
+	r := OrderedCollection new.
+	votes do:[:vote | vote isLike ifTrue:[r add: vote]].
+	^r
+</pre>
+
+<pre>
+Answer>>positiveVotes
+	| r |
+	r := OrderedCollection new.
+	votes do:[:vote | vote isLike ifTrue:[r add: vote]].
+	^r
+</pre>
+
+<pre>
+Question>>addVote: aVote
+	votes add: aVote
+</pre>
+
+<pre>
+Answer>>addVote: aVote
+	votes add: aVote
+</pre>
+
+Y por supuesto, este *Bad Smell* también se presenta en los mensajes *>>initialize* de las clases **Question** y **Answer**:
+<pre>
+Question>>initialize
+	answers := OrderedCollection new.
+	topics := OrderedCollection new.
+	votes := OrderedCollection new.
+	timestamp := DateAndTime now.
+</pre>
+
+<pre>
+Answer>>initialize
+	votes := OrderedCollection new.
+	timestamp := DateAndTime now.	
+</pre>
+>Como se puede observar en estos 2 últimos *snippets*, los mensajes *>>initialize* también presentan redundancia.
+
+Para solucionar dicho *Bad smell* se aplicaron los siguientes *Refactorings*:
+
+1. *Refactoring*: **Extract Superclass** y **Pull up Fields**
+
+Lo primero es crear una nueva clase abstracta ***Publication***, la cual tendrá como variables de instancia los campos que **Question** y **Answer** tienen en común:
+
+<pre>
+Object subclass: #Publication
+	instanceVariableNames: 'timestamp user votes description'
+	classVariableNames: ''
+</pre>
+
+Las clases **Question** y **Answer** quedarían conformadas de la siguiente manera:
+
+<pre>
+Publication subclass: #Question
+	instanceVariableNames: 'title answers topics'
+	classVariableNames: ''
+</pre>
+<pre>
+Publication subclass: #Answer
+	instanceVariableNames: 'question'
+	classVariableNames: ''
+</pre>
+
+>Se puede apreciar que ambas clases heredan ahora de ***Publication***, y se "subieron" los atributos que **Question** y **Answer** tenían en común.
+
+2. *Refactoring*: **Pull Up Method**
+
+Los métodos idénticos que fueron encontrados en **Question** y **Answer** ahora son llevados a la superclase:
+
+<pre>
+Publication>>negativeVotes
+	| r |
+	r := OrderedCollection new.
+	votes do:[:vote | vote isLike ifFalse:[r add: vote]].
+	^r
+</pre>
+
+<pre>
+Publication>>positiveVotes
+	| r |
+	r := OrderedCollection new.
+	votes do:[:vote | vote isLike ifTrue:[r add: vote]].
+	^r
+</pre>
+
+<pre>
+Publication>>addVote: aVote
+	votes add: aVote
+</pre>
+>Los métodos idénticos ahora se "subieron" a **Publication** y se eliminaron de **Question** y **Answer**. Además tambien se promocionaron los *accesors* que tenían en común dichas clases.
+
+3. *Refactoring*: **Pull Up Constructor Body**
+
+Este refactoring no se sigue al pie de la letra, debido a particularidades de *Smalltalk* pero se podría decir que se aplica para "limpiar" los mensajes *>>initialize* de **Question** y **Answer**.
+
+<pre>
+Publication>>initialize
+	votes := OrderedCollection new.
+	timestamp := DateAndTime now.
+</pre>
+
+<pre>
+Question>>initialize
+	super initialize.
+	answers := OrderedCollection new.
+	topics := OrderedCollection new.
+</pre>
+>Se ve como **Question** realiza un *LookUp* hacia la superclase para inicializar por defecto *votes* y *timestamp*, para luego inicializar sus atributos particulares. Por su parte, **Answer** ya no necesita en su propio *>>initialize*.
+________________________________________________________
 
 <p><em>Bad smell</em>: Romper encapsulamiento. </p>
 <p>Los valores de las variables de instancia deberian ser seteadas solo cuando son creadas, y no deberían cambiar luego.
@@ -111,14 +260,6 @@ En este caso se utilizan los métodos setters en ambos constructores, para inici
 
 <hr>
 
-<p><em>Bad smell</em>: Codigo duplicado. </p>
-<p> Encontramos que las clases <strong>Answer</strong> y <strong>Question</strong> tienen campos en común (variables: timestamp, description, user y votes) y también responden a los mismos mensajes (#addVote, #positiveVotes, #negativeVotes, y los getters para dichos campos). El código duplicado se encuentra en dichos mensajes, donde se replica exactamente las mismas líneas de código. </p>
-
-<p><em>Refactoring</em>: Extract Superclass, Pull Up Fields, Pull Up Methods, Pull Up Constructor Body</p>
-
-
-
-<hr>
 <strong>Publication>>positiveVotes</strong>
 <pre>
   | r | 
