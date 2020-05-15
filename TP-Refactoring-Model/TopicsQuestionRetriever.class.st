@@ -5,11 +5,9 @@ Class {
 }
 
 { #category : #retrieving }
-TopicsQuestionRetriever >> retrieveQuestions: aUser [
-	| temp topicsCol |
-	
+TopicsQuestionRetriever >> getQuestions: aUser [
+	| topicsCol |
 	topicsCol := OrderedCollection new.
-	aUser topics do:[ :topic | topicsCol addAll: topic questions ].
-	temp := topicsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
-	^ self retrieveQuestionsFor: aUser from: temp. 
+	aUser topics do: [ :topic | topicsCol addAll: topic questions ].
+	^ topicsCol
 ]

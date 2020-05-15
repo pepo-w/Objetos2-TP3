@@ -5,11 +5,9 @@ Class {
 }
 
 { #category : #retrieving }
-NewsQuestionRetriever >> retrieveQuestions: aUser [
-	| temp newsCol |
-
+NewsQuestionRetriever >> getQuestions: aUser [
+	| newsCol |
 	newsCol := OrderedCollection new.
-	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
-	temp := newsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
-	^ self retrieveQuestionsFor: aUser from: temp. 
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]]. "cuooraTodayQuestions"
+	^ newsCol
 ]

@@ -5,11 +5,10 @@ Class {
 }
 
 { #category : #retrieving }
-SocialQuestionRetriever >> retrieveQuestions: aUser [
-	| temp followingCol |
+SocialQuestionRetriever >> getQuestions: aUser [
+	| followingCol |
 	
 	followingCol := OrderedCollection new.
-	aUser following do:[ :follow | followingCol addAll: follow questions ].
-	temp := followingCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
-	^ self retrieveQuestionsFor: aUser from: temp. 
+	aUser following do: [ :follow | followingCol addAll: follow questions ].
+	^ followingCol
 ]

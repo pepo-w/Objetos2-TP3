@@ -5,12 +5,12 @@ Class {
 }
 
 { #category : #retrieving }
-PopularTodayQuestionRetriever >> retrieveQuestions: aUser [
-	| temp popularTCol averageVotes |
+PopularTodayQuestionRetriever >> getQuestions: aUser [
+	| popularTCol averageVotes |
 	
 	popularTCol := OrderedCollection new.
-	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
 	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
-	temp := (popularTCol select:[:q | q positiveVotes size >= averageVotes ]) asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
-	^ self retrieveQuestionsFor: aUser from: temp. 
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]]. "cuooraTodayQuestions"
+	^ (popularTCol select: [:q | q positiveVotes size >= averageVotes ]) "cuoora questionsAboveAverage"
+	
 ]
