@@ -33,18 +33,12 @@ Publication >> initialize [
 
 { #category : #'as yet unclassified' }
 Publication >> negativeVotes [
-	| r |
-	r := OrderedCollection new.
-	votes do:[:vote | vote isLike ifFalse:[r add: vote]].
-	^r
+	^ votes reject: [ :vote | vote isLike ].
 ]
 
 { #category : #'as yet unclassified' }
 Publication >> positiveVotes [
-	| r |
-	r := OrderedCollection new.
-	votes do:[:vote | vote isLike ifTrue:[r add: vote]].
-	^r
+	^ votes select: [ :vote | vote isLike ].
 ]
 
 { #category : #accessing }
