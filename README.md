@@ -52,6 +52,8 @@ Answer>>positiveVotes
 	^r
 </pre>
 
+>**Nota**: Ademas, alguien me puede explicar porque se llama  **| r |** la variable? No se mencionó eso. Esto es una cita. Hasta luego 
+
 <pre>
 Question>>addVote: aVote
 	votes add: aVote
