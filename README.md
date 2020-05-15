@@ -150,6 +150,45 @@ Question>>initialize
 >Se ve como **Question** realiza un *LookUp* hacia la superclase para inicializar por defecto *votes* y *timestamp*, para luego inicializar sus atributos particulares. Por su parte, **Answer** ya no necesita en su propio *>>initialize*.
 ________________________________________________________
 
+#### *Bad smell*: Reinventando la rueda
+
+Se itera sobre la coleccion votes con '*do:*', cuando puede obtenerse el mismo resultado con otro mensaje ya implementado para colecciones (*select:*):
+
+<pre>
+Publication>>negativeVotes
+	| r |
+	r := OrderedCollection new.
+	votes do:[:vote | vote isLike ifFalse:[r add: vote]].
+	^r
+</pre>
+
+<pre>
+publication>>positiveVotes
+	| r |
+	r := OrderedCollection new.
+	votes do:[:vote | vote isLike ifTrue:[r add: vote]].
+	^r
+</pre>
+
+*Refactoring*: **Substitute Algorithm**.
+
+Se utiliza *select:* en lugar de *do*, eliminando la expresión *ifTrue:[]*, y se retorna el resultado de la operación. Se elimina también la variable local. 
+
+<pre>
+Publication>>positiveVotes
+	^ votes select: [ :vote | vote isLike ].
+</pre>
+
+En el caso de *>>negativeVotes* la solución es muy similar, la única diferencia es que se utiliza el mensaje *reject:*:
+<pre>
+Publication>>negativeVotes
+	^votes reject: [ :vote | vote isLike ].
+</pre>
+
+Con este *refactoring* se gana legibilidad y se expresa la intención del código de manera más clara.
+
+____________________________________________________________________
+
 <p><em>Bad smell</em>: Romper encapsulamiento. </p>
 <p>Los valores de las variables de instancia deberian ser seteadas solo cuando son creadas, y no deberían cambiar luego.
 En este caso se utilizan los métodos setters en ambos constructores, para inicializar el objeto. Estos setters luego pueden generear que se rompa el encapsulamiento, modificando por fuera de la propia clase Vote sus atributos. </p>
@@ -258,36 +297,6 @@ En este caso se utilizan los métodos setters en ambos constructores, para inici
     question := Question newWithTitle: 'Question  title' description: 'Question description' user: (User new) topic: (Topic new)
 </pre>
 
-<hr>
-
-<strong>Publication>>positiveVotes</strong>
-<pre>
-  | r | 
-  r := OrderedCollection new. 
-  votes do:[:vote | vote isLike ifTrue:[r add: vote]]. 
-  ^r
-</pre>
-
-<p><em>Bad smell</em>: reinventando la rueda o duplicated code.</p>
-<p>Se itera sobre la coleccion votes con 'do', cuando puede obtenerse el mismo resultado con otro metodo ya implementado para colecciones (select). </p>
-<p><em>Refactoring</em>: substitute algorithm.</p>
-<p>Se utiliza 'select' en lugar de 'do', eliminando la expresión 'ifTrue', y se retorna el resultado de la operación. Se elimina la variable local. </p>
-<pre>  ^ votes select: [ :vote | vote isLike ]. </pre>
-<hr>
-
-<strong>Publication>>negativeVotes</strong>
-<pre>
-  | r |
-  r := OrderedCollection new.  
-  votes do:[:vote | vote isLike ifFalse:[r add: vote]]. 
-  ^r
-</pre>
-
-<p><em>Bad smell</em>: reinventando la rueda o duplicated code.</p>
-<p>Se itera sobre la coleccion votes con 'do', cuando puede obtenerse el mismo resultado con otro metodo ya implementado para colecciones (reject). </p>
-<p><em>Refactoring</em>: substitute algorithm.</p>
-<p>Se utiliza 'reject' en lugar de 'do', eliminando la expresión 'ifFalse:', y se retorna el resultado de la operación. Se elimina la variable local. </p>
-<pre>  ^ votes reject: [ :vote | vote isLike ]. </pre>
 <hr>
  
 
