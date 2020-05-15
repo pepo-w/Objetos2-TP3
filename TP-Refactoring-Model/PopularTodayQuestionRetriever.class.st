@@ -6,9 +6,8 @@ Class {
 
 { #category : #retrieving }
 PopularTodayQuestionRetriever >> retrieveQuestions: aUser [
-	| qRet temp popularTCol averageVotes |
+	| temp popularTCol averageVotes |
 	
-	qRet := OrderedCollection new.
 	popularTCol := OrderedCollection new.
 	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
 	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.

@@ -6,9 +6,8 @@ Class {
 
 { #category : #retrieving }
 NewsQuestionRetriever >> retrieveQuestions: aUser [
-	| qRet temp newsCol |
+	| temp newsCol |
 
-	qRet := OrderedCollection new.	
 	newsCol := OrderedCollection new.
 	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
 	temp := newsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
