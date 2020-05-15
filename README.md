@@ -509,7 +509,124 @@ QuestionRetriever>>sortQuestionsByVotes: aCollection
 	^ aCollection asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
 </pre>
 
+Luego de aplicar este refactoring, el método *retrieveQuestions: aUser* quedaría implementado de esta manera en cada una de las subclases:
 
+<pre>
+NewsQuestionRetriever>>retrieveQuestions: aUser
+	| temp newsCol |
+	
+	newsCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
+	temp := self sortQuestionsByVotes: newsCol.
+	^ self retrieveQuestionsFor: aUser from: temp. 
+</pre>
+
+<pre>
+PopularTodayQuestionRetriever>>retrieveQuestions: aUser
+	| temp popularTCol averageVotes |
+	
+	popularTCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
+	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
+	temp := self sortQuestionsByVotes: (popularTCol select:[:q | q positiveVotes size >= averageVotes ]).
+	^ self retrieveQuestionsFor: aUser from: temp. 
+</pre>
+
+<pre>
+SocialQuestionRetriever>>retrieveQuestions: aUser
+	| temp followingCol |
+	
+	followingCol := OrderedCollection new.
+	aUser following do: [ :follow | followingCol addAll: follow questions ].
+	temp := self sortQuestionsByVotes: followingCol.
+	^ self retrieveQuestionsFor: aUser from: temp.
+</pre>
+
+<pre>
+TopicsQuestionRetriever>>retrieveQuestions: aUser
+	| temp topicsCol |
+	
+	topicsCol := OrderedCollection new.
+	aUser topics do: [ :topic | topicsCol addAll: topic questions ].
+	temp := self sortQuestionsByVotes: topicsCol.
+	^ self retrieveQuestionsFor: aUser from: temp
+</pre>
+
+Por último se realiza el **Extract Method** para el paso 1, pero en este caso no se realiza el **Pull Up Method** ya que cada subclase implementa este paso de una forma particular. A continuación se muestran los snippet del código resultante para cada subclase:
+
+<pre>
+NewsQuestionRetriever>>getQuestionsFrom: aCollection
+	| newsCol |
+	
+	newsCol := OrderedCollection new.
+	aCollection do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
+	^ newsCol
+</pre>
+
+<pre>
+NewsQuestionRetriever>>retrieveQuestions: aUser
+	| temp newsCol |
+
+	newsCol := self getQuestionsFrom: cuoora questions.
+	temp := self sortQuestionsByVotes: newsCol.
+	^ self retrieveQuestionsFor: aUser from: temp. 
+</pre>
+
+<pre>
+PopularTodayQuestionRetriever>>getQuestionsFrom: aCollection
+	| popularTCol |
+	
+	popularTCol := OrderedCollection new.
+	aCollection do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
+	^ popularTCol
+</pre>
+
+<pre>
+PopularTodayQuestionRetriever>>retrieveQuestions: aUser
+	| temp popularTCol averageVotes |
+	
+	popularTCol := self getQuestionsFrom: cuoora questions. 
+	
+	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
+	temp := self sortQuestionsByVotes: (popularTCol select:[:q | q positiveVotes size >= averageVotes ]).
+	^ self retrieveQuestionsFor: aUser from: temp. 
+</pre>
+
+<pre>
+SocialQuestionRetriever>>getQuestionsFrom: aCollection
+	| followingCol |
+	
+	followingCol := OrderedCollection new.
+	aCollection do: [ :follow | followingCol addAll: follow questions ].
+	^ followingCol
+</pre>
+
+<pre>
+SocialQuestionRetriever>>retrieveQuestions: aUser
+	| temp followingCol |
+	
+	followingCol := self getQuestionsFrom: aUser following.
+	temp := self sortQuestionsByVotes: followingCol.
+	^ self retrieveQuestionsFor: aUser from: temp.
+</pre>
+
+<pre>
+TopicsQuestionRetriever>>getQuestionsFrom: aCollection
+	| topicsCol |
+	
+	topicsCol := OrderedCollection new.
+	aCollection do: [ :topic | topicsCol addAll: topic questions ].
+	^ topicsCol
+</pre>
+
+<pre>
+TopicsQuestionRetriever>>retrieveQuestions: aUser
+	| temp topicsCol |
+	
+	topicsCol := self getQuestionsFrom: aUser topics.
+	temp := self sortQuestionsByVotes: topicsCol.
+	^ self retrieveQuestionsFor: aUser from: temp
+</pre>
 ____________________________________________________________________
 
 <p><em>Bad smell</em>: Romper encapsulamiento. </p>
