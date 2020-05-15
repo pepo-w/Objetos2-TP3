@@ -263,7 +263,7 @@ QuestionRetriever subclass: #PopularTodayQuestionRetriever
 	classVariableNames: ''
 </pre>
 
-A continuación aplicamos el refactoring **Replace Conditional With Polymorphism**, de manera que las subclases implementen el método *#retrieveQuestions: aUser* (con el código de sus respectivos condicionales: **Extract Method**), mientras que en la superclase este método pasa a ser abstracto. Para cada subclase se utilizarán sólo las variables temporales necesarias, y se incluye el retorno del método (<code>^qRet reject:[:q | q user = aUser].</code>), que es común para todas las subclases.
+A continuación aplicamos el refactoring **Replace Conditional With Polymorphism**, de manera que las subclases implementen el método *#retrieveQuestions: aUser* (con el código de sus respectivos condicionales: **Extract Method**), mientras que en la superclase este método pasa a ser abstracto. Para cada subclase se utilizarán sólo las variables temporales necesarias, y se incluye el retorno del método <code>^qRet reject:[:q | q user = aUser].</code> , que es común para todas las subclases.
 
 <pre>
 SocialQuestionRetriever>>retrieveQuestions: aUser
