@@ -31,14 +31,14 @@ QuestionRetriever >> retrieveQuestions: aUser [
 ]
 
 { #category : #'as yet unclassified' }
-QuestionRetriever >> retrieveQuestionsFor: aUser from: aCollection [
+QuestionRetriever >> retrieveQuestionsFor: aUser from: questions [
 	| qRet |
 	
-	qRet := aCollection last: (100 min: aCollection size).
+	qRet := questions last: (100 min: questions size).
 	^qRet reject:[:q | q user = aUser].
 ]
 
 { #category : #sorting }
-QuestionRetriever >> sortQuestionsByVotes: aCollection [
-	^ aCollection asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
+QuestionRetriever >> sortQuestionsByVotes: questions [
+	^ questions asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
 ]
