@@ -436,7 +436,7 @@ retrieveQuestions: aUser
 
 *Refactoring*: **Form Template Method**
 
-Para la aplicación de este refactoring, en primer lugar hacemos **Extract Method** en todas las subclases para cada uno de los pasos mencionados, con un nombre en común que exprese la intención del paso. Para obtener mayor legibilidad y mantener el mismo nombre de método para todas las subclases, aplicamos el refactoring **Parameterize Method**.
+Para la aplicación de este refactoring, en primer lugar hacemos **Extract Method** en todas las subclases para cada uno de los pasos mencionados, con un nombre en común que exprese la intención del paso. Los métodos creados se hacen con protocolo *private*, ya que consisten en funcionamiento interno para realizar *#retrieveQuestions: aUser*, de modo que este últomo sea el único método visible para **User**. Para obtener mayor legibilidad y mantener el mismo nombre de método para todas las subclases, aplicamos el refactoring **Parameterize Method**.
 
 Primero se extrae el código repetido para el paso 3 en un nuevo método *retrieveQuestionsFor: aUser from: aCollection*, quedando conformado de la siguiente manera:
 
@@ -616,7 +616,8 @@ QuestionRetriever>>retrieveQuestions: aUser
 
 >**Nota**: también se podría remover la variable | questions | utilizando **Replace Temp With Query**, pero creemos que esto le quitaría legibilidad al código ya que quedarían los tres pasos condensados en una sola línea. 
 
-De esta manera, queda formado un método template que generaliza los pasos del algoritmo, e implementa el comportamiento que comparten las subclases de **QuestionRetriever**. A su vez cada subclase redefine el paso 1 de forma particular.
+De esta manera, queda formado un método template que generaliza los pasos del algoritmo, e implementa el comportamiento que comparten las subclases de **QuestionRetriever**. A su vez cada subclase redefine el paso 1 de forma particular. 
+Esta forma de organizar el código aporta a que el proyecto sea *escalable*: si se decidieran agregar nuevas subclases de **QuestionRetriever**, que obtengan questions bajo nuevos "criterios", basta con utilizar el template method redefiniendo aquellos pasos que deben hacerse de forma diferente.
 ____________________________________________________________________
 
 #### *Bad smell*: Feature Envy
@@ -628,7 +629,144 @@ La forma de refactorizar esto es similar en todos los casos, consiste en determi
 
 A continuación se pueden ver los métodos con *Feature Envy* y sus respectivos *refactorings*.
 
+**QuestionRetriever>>sortQuestionsByVotes: questions**
 
+<pre>
+QuestionRetriever>>sortQuestionsByVotes: questions
+	^ questions asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
+</pre>
+
+En este caso **QuestionRetriever** obtiene la colección de votos positivos de cada respuesta, para luego calcular su tamaño.
+*Refactoring*: delegar la responsabilidad de hacer esta operación a la clase **Publication** (ya que tanto **Question** como **Answer** tienen una colección de votos positivos).
+
+<pre>
+Publication>>sizeOfPositiveVotes
+	^ self positiveVotes size.
+</pre>
+
+<pre>
+QuestionRetriever>>sortQuestionsByVotes: questions
+	^ questions asSortedCollection: [ :a :b | a sizeOfPositiveVotes > b sizeOfPositiveVotes ].
+</pre>
+
+
+**QuestionRetriever>>retrieveQuestionsFor: aUser from: questions**
+
+<pre>
+QuestionRetriever>>retrieveQuestionsFor: aUser from: questions
+	| qRet |
+	
+	qRet := questions last: (100 min: questions size).
+	^qRet reject:[:q | q user = aUser].
+</pre>
+
+En este caso el *Feature Envy* se da en la última linea, se accede a la variable privada *user* de cada *question* para verificar si es el mismo user recibido como parámetro.
+*Refactoring*: se delega a **Publication** la tarea de verificar si *aUser* es el *user* asociado a un objeto *question* o *answer*.
+
+<pre>
+Publication>>hasTheAuthor: aUser
+	^ self user = aUser.
+</pre>
+
+<pre>
+QuestionRetriever>>retrieveQuestionsFor: aUser from: questions
+	| qRet |
+	
+	qRet := questions last: (100 min: questions size).
+	^ qRet reject: [ :q | q hasTheAuthor: aUser ].
+</pre>
+
+Observando el código es claro que el método hace dos cosas: obtener las últimas 100 preguntas de *questions* y filtrar aquellas cuyo user coincide con *aUser*. Para hacerlo más legible, aplicamos **Extract Method** para ambos pasos para que cada uno sea un método privado. Además agregamos un método privado que retorne la cantidad de questions que se desean obtener en el primer paso, para que este número no quede "harcodeado" en el código, y sea fácil de adaptar en el caso de ser necesario modificar el número.
+
+<pre>
+QuestionRetriever>>numberOfLastQuestions
+	^ 100.
+</pre>
+
+<pre>
+QuestionRetriever>>getLastQuestionsFrom: questions 
+	^ questions last: (self numberOfLastQuestions min: questions size).
+</pre>
+
+<pre>
+QuestionRetriever>>rejectQuestionsFrom: questions withAuthor: aUser
+	^ questions reject: [ :q | q hasTheAuthor: aUser ].
+</pre>
+
+Finalmente aplicamos **Replace Temp With Query** para remover la variable local | qRet |. 
+
+<pre>
+QuestionRetriever>>retrieveQuestionsFor: aUser from: questions
+	^ self rejectQuestionsFrom: (self getLastQuestionsFrom: questions) withAuthor: aUser.
+</pre>
+
+
+**NewsQuestionRetriever>>getQuestionsFor: aUser**
+
+<pre>
+NewsQuestionRetriever>>getQuestionsFor: aUser
+	| newsCol |
+	
+	newsCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]]. "cuoora todayQuestions"
+	^ newsCol
+</pre>
+
+En este método se observan dos casos de *Feature Envy*: por un lado **NewsQuestionRetriever** accede a la variable *questions* de *cuoora* para realizar una operación sobre la colección (además se itera con *do:*, con olor a **Reinventando la Rueda**), y por otro lado se accede a la variable *timestamp* de cada *question* de la colección para verificar que sea del día actual. 
+*Refactoring*: se delega a **Publication** la responsabilidad de verificar si un objeto *answer* o *question* fue instanciado en el día actual. Y se delega a **CuOOra** la tarea de obtener preguntas del día, que en vez de hacerlo con *do:* utiliza *select:*.
+
+<pre>
+Publication>>isFromToday
+	^ self timestamp asDate = Date today.
+</pre>
+
+<pre>
+CuOOra>>todayQuestions
+	^ questions select: [ :q | q isFromToday ].
+</pre>
+
+<pre>
+NewsQuestionRetriever>>getQuestionsFor: aUser
+	^ cuoora todayQuestions.
+</pre>
+
+
+**PopularTodayQuestionRetriever>>getQuestionsFor: aUser**
+
+<pre>
+PopularTodayQuestionRetriever>>getQuestionsFor: aUser
+	| popularTCol averageVotes |
+	
+	popularTCol := OrderedCollection new.
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]]. 
+	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
+	^ (popularTCol select:[:q | q positiveVotes size >= averageVotes ])
+	
+</pre>
+	
+	
+**SocialQuestionRetriever>>getQuestionsFor: aUser**
+
+<pre>
+SocialQuestionRetriever>>getQuestionsFor: aUser
+	| followingCol |
+	
+	followingCol := OrderedCollection new.
+	aUser following do: [ :follow | followingCol addAll: follow questions ]. "aUser followingQuestions"
+	^ followingCol
+</pre>
+
+
+**TopicsQuestionRetriever>>getQuestionsFor: aUser**
+
+<pre>
+TopicsQuestionRetriever>>getQuestionsFor: aUser
+	| topicsCol |
+	
+	topicsCol := OrderedCollection new.
+	aUser topics do: [ :topic | topicsCol addAll: topic questions ]. "aUser topicsQuestions"
+	^ topicsCol
+</pre>
 ____________________________________________________________________
 
 Se me ocurre que podemos usar **Encapsulate Collection** en las clases que tienen getters para colecciones. Para el caso de Smalltalk sería retornar una copia.
