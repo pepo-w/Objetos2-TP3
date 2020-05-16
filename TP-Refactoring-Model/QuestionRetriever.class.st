@@ -24,11 +24,10 @@ QuestionRetriever >> getQuestionsFor: aUser [
 
 { #category : #retrieving }
 QuestionRetriever >> retrieveQuestions: aUser [
-	| temp aCollection |
+	| questions |
 
-	aCollection := self getQuestionsFor: aUser. 
-	temp := self sortQuestionsByVotes: aCollection.
-	^ self retrieveQuestionsFor: aUser from: temp. 
+	questions := self sortQuestionsByVotes: (self getQuestionsFor: aUser).
+	^ self retrieveQuestionsFor: aUser from: questions. 
 ]
 
 { #category : #'as yet unclassified' }
