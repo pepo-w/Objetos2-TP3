@@ -604,7 +604,7 @@ QuestionRetriever(Abstract)>>getQuestionsFor: aUser
 
 >**Nota**: Se puede observar que en las clases **NewsQuestionRetriever** y **PopularTodayQuestionRetriever** se recibe un parámetro *aUser* pero no se utiliza en el método. En general, para estos casos se utiliza el refactoring **Remove Parameter**, pero este es un caso particular en el que nos interesa crear un metodo template que sea implementado de la misma forma por todas las subclases, y por lo tanto los nombres de los métodos involucrados deben ser iguales para todas (incluyendo los parametros).
 
-Luego de realizar estos refactoring, llegamos a que el método *RetrieveQuestions: aUser* sea idéntico en todas las subclases (la única diferencia es el nombre de una variable local). Procedemos a hacer un **Pull Up Method**, y para resolver el problema del nombre de la variable temporal aplicamos **Replace Temp With Query** de forma que no sea necesario utilizarla. Además cambiamos el nombre de la variable | temp | por uno un poco más expresivo. Luego se elimina el método de las subclases para que utilicen el de la superclase.
+Luego de realizar estos refactoring, llegamos a que el método *RetrieveQuestions: aUser* sea idéntico en todas las subclases (la única diferencia es el nombre de una variable local). Procedemos a hacer un **Pull Up Method**, y para resolver el problema del nombre de la variable temporal aplicamos **Replace Temp With Query** de forma que no sea necesario utilizarla. Además cambiamos el nombre de la variable | temp | por uno un poco más expresivo, y en los métodos que reciben esa variable como parámetro también cambiamos el nombre para que queden iguales, ganando legibilidad. Luego se elimina el método de las subclases para que utilicen el de la superclase.
 
 <pre>
 QuestionRetriever>>retrieveQuestions: aUser
@@ -617,6 +617,12 @@ QuestionRetriever>>retrieveQuestions: aUser
 >**Nota**: también se podría remover la variable | questions | utilizando **Replace Temp With Query**, pero creemos que esto le quitaría legibilidad al código ya que quedarían los tres pasos condensados en una sola línea. 
 
 De esta manera, queda formado un método template que generaliza los pasos del algoritmo, e implementa el comportamiento que comparten las subclases de **QuestionRetriever**. A su vez cada subclase redefine el paso 1 de forma particular.
+____________________________________________________________________
+
+#### *Bad smell*: Feature Envy
+
+Observamos que **QuestionRetriever** y sus subclases tienen varios métodos que presentan este bad smell. En pocas palabras, en estos métodos se realizan operaciones con atributos y métodos que pertenecen a las clases **User**, **CuOOra** 
+
 ____________________________________________________________________
 
 Se me ocurre que podemos usar **Encapsulate Collection** en las clases que tienen getters para colecciones. Para el caso de Smalltalk sería retornar una copia.
