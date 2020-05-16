@@ -616,7 +616,8 @@ QuestionRetriever>>retrieveQuestions: aUser
 
 >**Nota**: también se podría remover la variable | questions | utilizando **Replace Temp With Query**, pero creemos que esto le quitaría legibilidad al código ya que quedarían los tres pasos condensados en una sola línea. 
 
-De esta manera, queda formado un método template que generaliza los pasos del algoritmo, e implementa el comportamiento que comparten las subclases de **QuestionRetriever**. A su vez cada subclase redefine el paso 1 de forma particular.
+De esta manera, queda formado un método template que generaliza los pasos del algoritmo, e implementa el comportamiento que comparten las subclases de **QuestionRetriever**. A su vez cada subclase redefine el paso 1 de forma particular. 
+Esta forma de organizar el código aporta a que el proyecto sea *escalable*: si se decidieran agregar nuevas subclases de **QuestionRetriever**, que obtengan questions bajo nuevos "criterios", basta con utilizar el template method redefiniendo aquellos pasos que deben hacerse de forma diferente.
 ____________________________________________________________________
 
 #### *Bad smell*: Feature Envy
