@@ -78,9 +78,8 @@ Answer>>initialize
 	votes := OrderedCollection new.
 	timestamp := DateAndTime now.	
 </pre>
->Como se puede observar en estos 2 últimos *snippets*, los mensajes *>>initialize* también presentan redundancia.
 
-Para solucionar dicho *Bad smell* se aplicaron los siguientes *Refactorings*:
+Para solucionar el *Bad smell* se aplicaron los siguientes *Refactorings*:
 
 1. *Refactoring*: **Extract Superclass** y **Pull up Fields**
 
@@ -99,13 +98,12 @@ Publication subclass: #Question
 	instanceVariableNames: 'title answers topics'
 	classVariableNames: ''
 </pre>
+
 <pre>
 Publication subclass: #Answer
 	instanceVariableNames: 'question'
 	classVariableNames: ''
 </pre>
-
->Se puede apreciar que ambas clases heredan ahora de ***Publication***, y se "subieron" los atributos que **Question** y **Answer** tenían en común.
 
 2. *Refactoring*: **Pull Up Method**
 
@@ -131,7 +129,8 @@ Publication>>positiveVotes
 Publication>>addVote: aVote
 	votes add: aVote
 </pre>
->Los métodos idénticos ahora se "subieron" a **Publication** y se eliminaron de **Question** y **Answer**. Además tambien se promocionaron los *accesors* que tenían en común dichas clases.
+
+También se promocionaron a la superclase los *accesors* que tenían en común dichas clases.
 
 3. *Refactoring*: **Pull Up Constructor Body**
 
@@ -149,12 +148,12 @@ Question>>initialize
 	answers := OrderedCollection new.
 	topics := OrderedCollection new.
 </pre>
->Se ve como **Question** realiza un *LookUp* hacia la superclase para inicializar por defecto *votes* y *timestamp*, para luego inicializar sus atributos particulares. Por su parte, **Answer** ya no necesita en su propio *>>initialize*.
+>**Question** realiza un *LookUp* hacia la superclase para instanciar *votes* y *timestamp*, y luego inicializa sus atributos particulares. Por su parte, **Answer** ya no necesita su propio *>>initialize*.
 ________________________________________________________
 
 #### *Bad smell*: Reinventando la rueda
 
-Se itera sobre la coleccion votes con '*do:*', cuando puede obtenerse el mismo resultado con otro mensaje ya implementado para colecciones (*select:*):
+Se itera sobre la colección *votes* con '*do:*', cuando puede obtenerse el mismo resultado con otros mensajes ya implementados para colecciones.
 
 <pre>
 Publication>>negativeVotes
@@ -165,7 +164,7 @@ Publication>>negativeVotes
 </pre>
 
 <pre>
-publication>>positiveVotes
+Publication>>positiveVotes
 	| r |
 	r := OrderedCollection new.
 	votes do:[:vote | vote isLike ifTrue:[r add: vote]].
@@ -174,14 +173,15 @@ publication>>positiveVotes
 
 *Refactoring*: **Substitute Algorithm**.
 
-Se utiliza *select:* en lugar de *do*, eliminando la expresión *ifTrue:[]*, y se retorna el resultado de la operación. Se elimina también la variable local. 
+Se utiliza *select:* en lugar de *do*, eliminando la expresión *ifTrue:*, y se retorna el resultado de la operación. Se elimina también la variable local. 
 
 <pre>
 Publication>>positiveVotes
 	^ votes select: [ :vote | vote isLike ].
 </pre>
 
-En el caso de *>>negativeVotes* la solución es muy similar, la única diferencia es que se utiliza el mensaje *reject:*:
+En el caso de *#negativeVotes* la solución es muy similar, la única diferencia es que se utiliza el mensaje *reject:*:
+
 <pre>
 Publication>>negativeVotes
 	^votes reject: [ :vote | vote isLike ].
@@ -193,7 +193,7 @@ ____________________________________________________________________
 
 #### *Bad smell*: Switch Statements
 
-Analizando el método *#retrieveQuestions: aUser* de la clase **QuestionRetriever**, observamos que el código consiste principalmente en una secuencia de "if option = #symbol", y en cada caso realiza una serie de operaciones para retornar una colección de instancias de Question (según distintos criterios). Esto se considera una mala práctica en OO, ya que puede obtenerse el mismo funcionamiento aplicando polimorfismo. 
+Analizando el método *#retrieveQuestions: aUser* de la clase **QuestionRetriever**, observamos que el código consiste principalmente en una secuencia de "if option = #symbol", y en cada caso realiza una serie de operaciones para retornar una colección de instancias de **Question** (según distintos criterios). Esto se considera una mala práctica en OO, ya que puede obtenerse el mismo funcionamiento aplicando polimorfismo. 
 
 >**Nota:** También consideramos que el método presenta el bad smell **Long Method**, que quedará resuelto luego de aplicar el refactoring para Switch Statements. 
 
@@ -226,7 +226,8 @@ QuestionRetriever>>retrieveQuestions: aUser
 			popularTCol := OrderedCollection new.
 			cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
 			averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
-			temp := (popularTCol select:[:q | q positiveVotes size >= averageVotes ]) asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+			temp := (popularTCol select:[:q | q positiveVotes size >= averageVotes ]) 
+						asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
 			qRet := temp last: (100 min: temp size).
 		].
 	
@@ -263,10 +264,12 @@ QuestionRetriever subclass: #PopularTodayQuestionRetriever
 	classVariableNames: ''
 </pre>
 
+>**QuestionRetriever** ahora es una clase Abstracta
+
 2. *Refactoring*: **Replace Conditional With Polymorphism**.
 
-A continuación tomamos el código correspondiente a cada una de las subclases que se encuentra en los condicionales de *QuestionRetriever>>retrieveQuestions: aUser*, y utilizando **Extract Method** junto con **Move Method** implementamos los mensajes en las subclases. Para cada subclase se utilizarán sólo las variables temporales necesarias, y se incluye el retorno del método <code>^qRet reject:[:q | q user = aUser].</code> , que es común para todas las subclases.
-Una vez que el método se encuentra redefinido por todas las subclases, modificamos el método en la superclase para que el mismo sea abstracto. (ahora la clase **QuestionRetriever** pasa a ser Abstracta)
+A continuación utilizamos **Extract Method** para el código asociado a cada uno de los símbolos *#social, #topics, #news, #popularToday*, y los implementamos en las respectivas subclases usando **Move Method**, bajo la firma *#RetrieveQuestions: aUser*. 
+Para cada subclase se utilizarán sólo las variables temporales que necesite, y se incluye el retorno del método: <code>^qRet reject:[:q | q user = aUser].</code> , dado que es común para todas las subclases.
 
 <pre>
 SocialQuestionRetriever>>retrieveQuestions: aUser
@@ -321,12 +324,13 @@ PopularTodayQuestionRetriever>>retrieveQuestions: aUser
 	^qRet reject:[:q | q user = aUser].
 </pre>
 
+Una vez que el método se encuentra redefinido por todas las subclases, modificamos el método en la superclase para que el mismo sea abstracto. 
 <pre>
 QuestionRetriever(Abstract)>>retrieveQuestions: aUser
 	^ self subclassResponsibility.
 </pre>
 
-Es claro que ya no es necesario el uso de los símbolos y condicionales, gracias a la implementación de polimorfismo, y por lo tanto la variable de instancia *-option* que ahora heredan las subclases ya no se utiliza. Tanto la variable como su setter *#option: anOption*, tienen olor a **Dead Code** (por el hecho de que ya no se usan), y en consecuencia *#initialize* y uno de los constructores dejan de tener sentido.
+Es claro que ya no es necesario utilizar símbolos y condicionales, gracias al uso de polimorfismo, y por lo tanto la variable de instancia *-option* que ahora heredan las subclases ya no se utiliza. Tanto la variable como su setter *#option: anOption*, tienen olor a **Dead Code** (por el hecho de que ya no se usan), y en consecuencia *#initialize* y uno de los constructores de clase dejan de tener sentido.
 
 <pre>
 QuestionRetriever>>initialize
@@ -339,7 +343,7 @@ QuestionRetriever(Class side)>>new: cuoora and: aSymbol
 </pre>
 
 Para este refactoring simplemente eliminamos la variable *-option* y los métodos mencionados. 
-Al ejecutar los tests correspondientes luego del refactoring, encontramos que los test fallaron dado que el constructor eliminado era utilizado en el setUp:
+Al ejecutar los tests correspondientes luego del refactoring, encontramos que los test fallaron dado que el constructor eliminado era utilizado en el setUp de **QuestionRetrieverTest**:
 
 <pre>
 QuestionRetrieverTest>>setUp
@@ -351,7 +355,8 @@ QuestionRetrieverTest>>setUp
    popularTodayRetriever := QuestionRetriever new: cuoora and: #popularToday.
 </pre>
 
-Para solucionar esto sin modificar la funcionalidad del test, reescribimos el código para que se instancie, en cada caso, un objeto de las subclases de QuestionRetriever (que al ser abstracta sería incorrecto instanciar). Luego comprobamos que los test pasen sin errores.
+Dado que ahora **QuestionRetriever** es una clase abstracta, sería incorrecto instanciarla. 
+Para solucionar esto sin alterar la funcionalidad de los test, reescribimos el código para que se instancie, en cada caso, un objeto de las subclases de QuestionRetriever. Se utiliza el constructor de la superclase que recibe como parámetro una instancia de cuoora.
 
 <pre>
 QuestionRetrieverTest>>setUp
@@ -367,8 +372,8 @@ ____________________________________________________________________
 
 #### *Bad smell*: Duplicated Code
 
-En las subclases de **QuestionRetriever** se puede observar que hay código duplicado con algunas particularidades que los diferencian, pero en general los algoritmos siguen los mismos pasos, en el mismo orden:
-1. Obtener una colección de instancias de **Question** relevantes para cada subclase (ya sea desde *aUser* o *cuoora*).
+En las subclases de **QuestionRetriever** se puede observar que hay código duplicado en el método *#retrieveQuestions: aUser*, con algunas particularidades que los diferencian. Identificamos que, de forma general, el algoritmo sigue los mismos pasos, y en el mismo orden:
+1. Obtener una colección de instancias de **Question**, relevantes para cada subclase (ya sea desde el parámetro *aUser* o la variable de instancia *-cuoora*).
 2. Ordenar dicha colección en forma ascendente según la cantidad de votos positivos de cada instancia.
 3. Filtrar la colección, retornando una colección con las últimas 100 questions que no contenga las questions realizadas por *aUser*.
 
@@ -430,9 +435,9 @@ retrieveQuestions: aUser
 
 *Refactoring*: **Form Template Method**
 
-Para la aplicación de este refactoring, en primer lugar hacemos **Extract Method** en todas las subclases para cada uno de los pasos mencionados, con un nombre en común que represente la intención del paso.
+Para la aplicación de este refactoring, en primer lugar hacemos **Extract Method** en todas las subclases para cada uno de los pasos mencionados, con un nombre en común que exprese la intención del paso.
 
-Primero se extrae el código repetido para el paso 3 en un nuevo método, quedando conformado de la siguiente manera:
+Primero se extrae el código repetido para el paso 3 en un nuevo método *retrieveQuestionsFor: aUser from: aCollection*, quedando conformado de la siguiente manera:
 
 <pre>
 retrieveQuestionsFor: aUser from: aCollection
@@ -441,7 +446,7 @@ retrieveQuestionsFor: aUser from: aCollection
 	^qRet reject:[:q | q user = aUser].
 </pre>
 
-Este procedimiento se podría realizar en todas las clases anteriormente mencionadas. Al tener todas idéntico funcionamiento, la implementación del mensaje puede estar definida en ***QuestionRetriever***, realizando **Pull Up Method**
+Se observa que esta porción de código se encuentra idénticamente en todas las subclases, por lo que la implementación del método puede estar definida en ***QuestionRetriever***, realizando **Pull Up Method**.
 
 <pre>
 QuestionRetriever>>retrieveQuestionsFor: aUser from: aCollection
@@ -450,7 +455,7 @@ QuestionRetriever>>retrieveQuestionsFor: aUser from: aCollection
 	^qRet reject:[:q | q user = aUser].
 </pre>
 
-Finalmente, los mensajes de las clases "hijas" de ***QuestionRetriever*** quedarían implementados de la siguiente manera:
+Finalmente, en el método *retrieveQuestions: aUser* de las subclases se utiliza el mensaje implementado en la superclase con *self*.
 
 <pre>
 NewsQuestionRetriever>>retrieveQuestions: aUser
@@ -493,7 +498,7 @@ TopicsQuestionRetriever>>retrieveQuestions: aUser
 	temp := topicsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
 	^ self retrieveQuestionsFor: aUser from: temp. 
 </pre>
->La variable temporal *qRet* ya no es necesaria y se puede quitar de las 4 subclases de ***QuestionRetriever***.
+>La variable temporal *qRet* ya no es necesaria y se puede quitar de las 4 subclases.
 
 En segundo lugar se extrae el código repetido para el paso 2 en un nuevo método, quedando conformado de la siguiente manera:
 
@@ -552,7 +557,7 @@ TopicsQuestionRetriever>>retrieveQuestions: aUser
 	^ self retrieveQuestionsFor: aUser from: temp
 </pre>
 
-Por último se realiza el **Extract Method** para el paso 1, pero en este caso no se realiza el **Pull Up Method** ya que cada subclase implementa este paso de una forma particular. En cambio, se implementa *getQuestionsFor: aUser* como un método abstracto en la superclase **QuestionRetriever**. A continuación se muestran los snippet del código resultante para cada clase:
+Por último se realiza el **Extract Method** para el paso 1, pero en este caso no se realiza el **Pull Up Method** ya que cada subclase implementa este paso de una forma particular. En cambio, se implementa *getQuestionsFor: aUser* como un método abstracto en la superclase **QuestionRetriever**. A continuación se muestra el código resultante para cada clase:
 
 <pre>
 NewsQuestionRetriever>>getQuestionsFor: aUser
@@ -596,9 +601,9 @@ QuestionRetriever(Abstract)>>getQuestionsFor: aUser
 	^ self subclassResponsibility.
 </pre>
 
->**Nota**: Se puede observar que en las clases **NewsQuestionRetriever** y **PopularTodayQuestionRetriever** se recibe un parámetro *aUser* pero no se utiliza en el método. En general, para estos casos se utiliza el refactoring **Remove Parameter**, pero este es un caso particular en el que nos interesa crear un metodo template que sea implementado de la misma forma por todas las subclases, y por lo tanto los nombres de los métodos deben ser iguales para todas (incluyendo los parametros).
+>**Nota**: Se puede observar que en las clases **NewsQuestionRetriever** y **PopularTodayQuestionRetriever** se recibe un parámetro *aUser* pero no se utiliza en el método. En general, para estos casos se utiliza el refactoring **Remove Parameter**, pero este es un caso particular en el que nos interesa crear un metodo template que sea implementado de la misma forma por todas las subclases, y por lo tanto los nombres de los métodos involucrados deben ser iguales para todas (incluyendo los parametros).
 
-Luego de realizar estos refactoring, nos encontramos con que el método *RetrieveQuestions: aUser* es idéntico en todas las subclases (la única diferencia es el nombre de una variable local). Procedemos a hacer un **Pull Up Method**, modificando el nombre de la variable local para que tenga un caracter más genérico, y se elimina el método de las subclases para que utilicen el de la superclase.
+Luego de realizar estos refactoring, llegamos a que el método *RetrieveQuestions: aUser* sea idéntico en todas las subclases (la única diferencia es el nombre de una variable local). Procedemos a hacer un **Pull Up Method**, modificando el nombre de la variable local para que tenga un caracter más genérico, y se elimina el método de las subclases para que utilicen el de la superclase.
 
 <pre>
 QuestionRetriever>>retrieveQuestions: aUser
@@ -609,117 +614,6 @@ QuestionRetriever>>retrieveQuestions: aUser
 	^ self retrieveQuestionsFor: aUser from: temp. 
 </pre>
 
-De esta manera, queda formado un metodo template que generaliza los pasos del algoritmo, e implementa el código que comparten las subclases de **QuestionRetriever**. A su vez cada subclase implementa sus funcionalidades particulares.
+De esta manera, queda formado un método template que generaliza los pasos del algoritmo, e implementa el código que comparten las subclases de **QuestionRetriever**. A su vez cada subclase implementa su comportamiento particular.
 ____________________________________________________________________
-
-<p><em>Bad smell</em>: Romper encapsulamiento. </p>
-<p>Los valores de las variables de instancia deberian ser seteadas solo cuando son creadas, y no deberían cambiar luego.
-En este caso se utilizan los métodos setters en ambos constructores, para inicializar el objeto. Estos setters luego pueden generear que se rompa el encapsulamiento, modificando por fuera de la propia clase Vote sus atributos. </p>
-<strong>Vote(class)>>user: aUser likesPublication: aPublication</strong>
-<pre>
-  ^ self new
-  user: aUser;
-  publication: aPublication;
-  yourself
-</pre>
-
-<strong>Vote(class)>>user: aUser dislikesPublication: aPublication</strong>
-<pre>
-  ^ self new
-  user: aUser;
-  publication: aPublication;
-  dislike;
-  yourself
-</pre>
-
-<strong>Vote>>user: anObject</strong>
-<pre>
-  user: anObject
-</pre>
-
-<strong>Vote>>publication: anObject</strong>
-<pre>
-  publication: anObject
-</pre>
-
-<p><em>Refactoring</em>: Remove setting Method. </p>
-<p>Eliminar los setters (verificando con antelación que no se utilizan) e inicializar los valores de las variables de instancia directamente mediante el constructor, agregando un método con protocolo privado que reciba parámetros para setear los atributos que sean necesarios.</p>
-
-<strong>Vote(private)>>initWithUser: anUser publication: aPublication</strong>
-<pre>
-  user:= anUser.
-  publication: aPublication
-</pre>
-
-<strong>Vote(class)>>user: aUser likesPublication: aPublication</strong>
-<pre>
-  ^ self new
-  initWithUser: aUser publication: aPublication;
-  yourself
-</pre>
-
-<strong>Vote(class)>>user: aUser dislikesPublication: aPublication</strong>
-<pre>
-  ^ self new
-  initWithUser: aUser publication: aPublication;
-  dislike;
-  yourself
-</pre>
-
-<p><strong>Nota:</strong> Este bad smell se encuentra también en las clases Answer, Question, Topic, y User. Decidimos aplicar el mismo refactoring a dichas clases, procediendo de de la misma forma (eliminar <em>setters</em> innecesarios, agregar un método de instancia privado que inicie las variables de instancia y por supuesto modificar el constructor) </p>
-
-<hr>
-<strong>Question(class)>>newWithTitle: title description: aDescription user: aUser</strong>
-<pre>
-  ^ self new
-	title: title;
-	description: aDescription;
-	user: aUser;
-	yourself.
-</pre>
-
-<strong>Question(class)>>newWithTitle: title description: aDescription user: aUser topic: aTopic</strong>
-<pre>
-  ^ self new
-  	title: title;
-	description: aDescription;
-	user: aUser;
-	addTopic: aTopic;
-  	yourself.
-</pre>
-
-<p><em>Bad smell</em>: Codigo duplicado. </p>
-<p>Al momento de realizar el refactoring anterior () sobre la clase Question, notamos que utiliza dos constructores muy similares, que tienen código duplicado.</p>
-<p><em>Refactoring</em>: Remove setting Method. </p>
-<p>Además de eliminar los setters de la forma antes mencionada, decidimos eliminar el constructor <strong>Question(class)>>newWithTitle: title description: aDescription user: aUser</strong>, por el hecho de que el otro constructor es más completo y más utilizado. En consecuencia, modificamos el setUp de QuestionTest para que utilice el nuevo constructor.</p>
-
-<strong>Question(class)>>newWithTitle: aTitle description: aDescription user: aUser topic: aTopic</strong>
-<pre>
-  ^ self new
-  initWithTitle: aTitle description: aDescription user: aUser topic: aTopic;
-  yourself
-</pre>
-
-<strong>Question>>initWithTitle: aTitle description: aDescription user: aUser topic: aTopic</strong>
-<pre>
-  title := aTitle.
-  description := aDescription.
-  user := aUser.
-  self addTopic: aTopic.
-</pre>
-
-<p>Snippet del código antes de la eliminación del constructor</p>
-<strong>QuestionTest>>setUp</strong>
-<pre>
-    question := Question newWithTitle: 'Question  title' description: 'Question description' user: (User new) 
-</pre>
-
-<p>Luego del refactoring aplicado:</p>
-<strong>QuestionTest>>setUp</strong>
-<pre>
-    question := Question newWithTitle: 'Question  title' description: 'Question description' user: (User new) topic: (Topic new)
-</pre>
-
-<hr>
- 
 
