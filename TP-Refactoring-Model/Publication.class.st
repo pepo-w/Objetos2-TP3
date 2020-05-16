@@ -25,10 +25,20 @@ Publication >> description: anObject [
 	description := anObject
 ]
 
+{ #category : #testing }
+Publication >> hasTheAuthor: aUser [
+	^ self user = aUser.
+]
+
 { #category : #initialize }
 Publication >> initialize [
 	votes := OrderedCollection new.
 	timestamp := DateAndTime now.
+]
+
+{ #category : #testing }
+Publication >> isFromToday [
+	^ self timestamp asDate = Date today.
 ]
 
 { #category : #'as yet unclassified' }
@@ -39,6 +49,11 @@ Publication >> negativeVotes [
 { #category : #'as yet unclassified' }
 Publication >> positiveVotes [
 	^ votes select: [ :vote | vote isLike ].
+]
+
+{ #category : #'as yet unclassified' }
+Publication >> sizeOfPositiveVotes [
+	^ self positiveVotes size.
 ]
 
 { #category : #accessing }

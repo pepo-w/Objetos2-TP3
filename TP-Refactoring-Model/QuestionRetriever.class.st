@@ -17,9 +17,24 @@ QuestionRetriever >> cuoora: aCuooraInstance [
 	cuoora := aCuooraInstance 
 ]
 
+{ #category : #private }
+QuestionRetriever >> getLastQuestionsFrom: questions [ 
+	^ questions last: (self numberOfLastQuestions min: questions size).
+]
+
 { #category : #retrieving }
 QuestionRetriever >> getQuestionsFor: aUser [
 	^ self subclassResponsibility.
+]
+
+{ #category : #private }
+QuestionRetriever >> numberOfLastQuestions [
+	^ 100.
+]
+
+{ #category : #private }
+QuestionRetriever >> rejectQuestionsFrom: questions withAuthor: aUser [
+	^ questions reject: [ :q | q hasTheAuthor: aUser ].
 ]
 
 { #category : #retrieving }
@@ -30,15 +45,14 @@ QuestionRetriever >> retrieveQuestions: aUser [
 	^ self retrieveQuestionsFor: aUser from: questions. 
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 QuestionRetriever >> retrieveQuestionsFor: aUser from: questions [
-	| qRet |
 	
-	qRet := questions last: (100 min: questions size).
-	^qRet reject:[:q | q user = aUser].
+	^ self rejectQuestionsFrom: (self getLastQuestionsFrom: questions) withAuthor: aUser.
+	
 ]
 
-{ #category : #sorting }
+{ #category : #private }
 QuestionRetriever >> sortQuestionsByVotes: questions [
-	^ questions asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
+	^ questions asSortedCollection: [ :a :b | a sizeOfPositiveVotes > b sizeOfPositiveVotes ].
 ]

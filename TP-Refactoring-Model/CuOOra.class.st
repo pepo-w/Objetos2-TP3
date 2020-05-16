@@ -44,6 +44,11 @@ CuOOra >> questions [
 	^ questions
 ]
 
+{ #category : #'as yet unclassified' }
+CuOOra >> todayQuestions [
+	^ questions select: [ :q | q isFromToday ].
+]
+
 { #category : #accessing }
 CuOOra >> topics [
 	^ topics
