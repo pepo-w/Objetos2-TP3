@@ -604,7 +604,7 @@ QuestionRetriever(Abstract)>>getQuestionsFor: aUser
 
 >**Nota**: Se puede observar que en las clases **NewsQuestionRetriever** y **PopularTodayQuestionRetriever** se recibe un parámetro *aUser* pero no se utiliza en el método. En general, para estos casos se utiliza el refactoring **Remove Parameter**, pero este es un caso particular en el que nos interesa crear un metodo template que sea implementado de la misma forma por todas las subclases, y por lo tanto los nombres de los métodos involucrados deben ser iguales para todas (incluyendo los parametros).
 
-Luego de realizar estos refactoring, llegamos a que el método *RetrieveQuestions: aUser* sea idéntico en todas las subclases (la única diferencia es el nombre de una variable local). Procedemos a hacer un **Pull Up Method**, y para resolver el problema del nombre de la variable temporal aplicamos **Replace Temp With Query** de forma que no sea necesaria la variable. Además cambiamos el nombre de la variable | temp | por uno un poco más expresivo. Luego se elimina el método de las subclases para que utilicen el de la superclase.
+Luego de realizar estos refactoring, llegamos a que el método *RetrieveQuestions: aUser* sea idéntico en todas las subclases (la única diferencia es el nombre de una variable local). Procedemos a hacer un **Pull Up Method**, y para resolver el problema del nombre de la variable temporal aplicamos **Replace Temp With Query** de forma que no sea necesario utilizarla. Además cambiamos el nombre de la variable | temp | por uno un poco más expresivo. Luego se elimina el método de las subclases para que utilicen el de la superclase.
 
 <pre>
 QuestionRetriever>>retrieveQuestions: aUser
