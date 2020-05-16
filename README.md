@@ -743,6 +743,11 @@ PopularTodayQuestionRetriever>>getQuestionsFor: aUser
 	^ (popularTCol select:[:q | q positiveVotes size >= averageVotes ])
 	
 </pre>
+
+En este caso el *Feature Envy* se da porque **PopularTodayQuestionRetriever** accede a la variable *questions* de *cuoora* para seleccionar aquellas que sean del día actual (ya refactorizado), y luego realiza un cálculo de promedio con dicha colección para finalmente filtrar aquellas preguntas con votos positivos superiores al promedio. 
+*Refactoring*: Se delega a **CuOOra** la tarea de obtener las preguntas del día que superen el promedio de votos positivos (así como también la tarea de calcular dicho promedio). 
+
+
 	
 	
 **SocialQuestionRetriever>>getQuestionsFor: aUser**
