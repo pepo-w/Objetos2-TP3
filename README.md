@@ -621,7 +621,13 @@ ____________________________________________________________________
 
 #### *Bad smell*: Feature Envy
 
-Observamos que **QuestionRetriever** y sus subclases tienen varios métodos que presentan este bad smell. En pocas palabras, en estos métodos se realizan operaciones con atributos y métodos que pertenecen a las clases **User**, **CuOOra** 
+Observamos que **QuestionRetriever** y sus subclases tienen varios métodos que presentan este bad smell. En pocas palabras, en estos métodos se realizan operaciones con atributos y mensajes que pertenecen (la mayoría) a las clases **User** y **CuOOra**. Es decir, le "piden" datos que necesitan de estas clases para realizar distintas operaciones. 
+Esto se considera un bad smell, ya que la responsabilidad de implementar cierta funcionalidad debe recaer en las clases que poseen los datos necesarios para llevar a cabo dicha funcionalidad. 
+
+La forma de refactorizar esto es similar en todos los casos, consiste en determinar quién tiene la responsabilidad de cada operación, para luego delegar la implementación a la clase que corresponda con **Extract Method** y **Move Method**.
+
+A continuación se pueden ver los métodos con *Feature Envy* y sus respectivos *refactorings*.
+
 
 ____________________________________________________________________
 
