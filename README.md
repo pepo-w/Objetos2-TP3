@@ -436,7 +436,7 @@ retrieveQuestions: aUser
 
 *Refactoring*: **Form Template Method**
 
-Para la aplicación de este refactoring, en primer lugar hacemos **Extract Method** en todas las subclases para cada uno de los pasos mencionados, con un nombre en común que exprese la intención del paso.
+Para la aplicación de este refactoring, en primer lugar hacemos **Extract Method** en todas las subclases para cada uno de los pasos mencionados, con un nombre en común que exprese la intención del paso. Para obtener mayor legibilidad y mantener el mismo nombre de método para todas las subclases, aplicamos el refactoring **Parameterize Method**.
 
 Primero se extrae el código repetido para el paso 3 en un nuevo método *retrieveQuestionsFor: aUser from: aCollection*, quedando conformado de la siguiente manera:
 
@@ -604,16 +604,17 @@ QuestionRetriever(Abstract)>>getQuestionsFor: aUser
 
 >**Nota**: Se puede observar que en las clases **NewsQuestionRetriever** y **PopularTodayQuestionRetriever** se recibe un parámetro *aUser* pero no se utiliza en el método. En general, para estos casos se utiliza el refactoring **Remove Parameter**, pero este es un caso particular en el que nos interesa crear un metodo template que sea implementado de la misma forma por todas las subclases, y por lo tanto los nombres de los métodos involucrados deben ser iguales para todas (incluyendo los parametros).
 
-Luego de realizar estos refactoring, llegamos a que el método *RetrieveQuestions: aUser* sea idéntico en todas las subclases (la única diferencia es el nombre de una variable local). Procedemos a hacer un **Pull Up Method**, modificando el nombre de la variable local para que tenga un caracter más genérico, y se elimina el método de las subclases para que utilicen el de la superclase.
+Luego de realizar estos refactoring, llegamos a que el método *RetrieveQuestions: aUser* sea idéntico en todas las subclases (la única diferencia es el nombre de una variable local). Procedemos a hacer un **Pull Up Method**, y para resolver el problema del nombre de la variable temporal aplicamos **Replace Temp With Query** de forma que no sea necesaria la variable. Además cambiamos el nombre de la variable | temp | por uno un poco más expresivo. Luego se elimina el método de las subclases para que utilicen el de la superclase.
 
 <pre>
 QuestionRetriever>>retrieveQuestions: aUser
-	| temp aCollection |
+	| questions |
 
-	aCollection := self getQuestionsFor: aUser. 
-	temp := self sortQuestionsByVotes: aCollection.
-	^ self retrieveQuestionsFor: aUser from: temp. 
+	questions := self sortQuestionsByVotes: (self getQuestionsFor: aUser).
+	^ self retrieveQuestionsFor: aUser from: questions. 
 </pre>
+
+>**Nota**: también se podría remover la variable | questions | utilizando **Replace Temp With Query**, pero creemos que esto le quitaría legibilidad al código ya que quedarían los tres pasos condensados en una sola línea. 
 
 De esta manera, queda formado un método template que generaliza los pasos del algoritmo, e implementa el comportamiento que comparten las subclases de **QuestionRetriever**. A su vez cada subclase redefine el paso 1 de forma particular.
 ____________________________________________________________________
