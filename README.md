@@ -2,7 +2,7 @@
 ## REGISTRO DE BAD SMELLS Y REFACTORING
 #### *Bad smell*: Duplicated Code 
 
-Encontramos que las clases **Answer** y **Question** tienen campos en común (variables de instancia: *timestamp, description, user* y *votes*) y también ambas clases responden a los mensajes *#addVote:, #positiveVotes, #negativeVotes*, con idéntica funcionalidad.
+Encontramos que las clases **Answer** y **Question** tienen atributos en común (variables de instancia: *timestamp, description, user* y *votes*) y también ambas clases responden a los mensajes *#addVote:, #positiveVotes, #negativeVotes*, con idéntica funcionalidad.
 
 <pre>
 Object subclass: #Question
@@ -17,9 +17,9 @@ Object subclass: #Answer
 	classVariableNames: ''
 	package: 'TP-Refactoring-Model'
 </pre>
->En las definiciones de clase se observan atributos en común
 
 También se observa redundancia en los métodos:
+
 <pre>
  Question>>negativeVotes
 	| r |
@@ -52,7 +52,7 @@ Answer>>positiveVotes
 	^r
 </pre>
 
->**Nota**: Ademas, alguien me puede explicar porque se llama  **| r |** la variable? Poco expresivo.. 
+>**Nota**: Además, alguien me puede explicar porque se llama  **| r |** la variable?  
 
 <pre>
 Question>>addVote: aVote
@@ -64,7 +64,8 @@ Answer>>addVote: aVote
 	votes add: aVote
 </pre>
 
-Y por supuesto, este *Bad Smell* también se presenta en los mensajes *>>initialize* de las clases **Question** y **Answer**:
+El código duplicado también se encuentra en los métodos *>>initialize* de las clases **Question** y **Answer**:
+
 <pre>
 Question>>initialize
 	answers := OrderedCollection new.
@@ -79,7 +80,7 @@ Answer>>initialize
 	timestamp := DateAndTime now.	
 </pre>
 
-Para solucionar el *Bad smell* se aplicaron los siguientes *Refactorings*:
+Para resolver el *Bad smell* se aplicaron los siguientes *Refactorings*:
 
 1. *Refactoring*: **Extract Superclass** y **Pull up Fields**
 
@@ -130,7 +131,7 @@ Publication>>addVote: aVote
 	votes add: aVote
 </pre>
 
-También se promocionaron a la superclase los *accesors* que tenían en común dichas clases.
+También se promocionaron a la superclase los *getters* y *setters* que tenían en común dichas clases.
 
 3. *Refactoring*: **Pull Up Constructor Body**
 
@@ -153,7 +154,7 @@ ________________________________________________________
 
 #### *Bad smell*: Reinventando la rueda
 
-Se itera sobre la colección *votes* con '*do:*', cuando puede obtenerse el mismo resultado con otros mensajes ya implementados para colecciones.
+Se itera sobre la colección *votes* con '*do:*', cuando puede obtenerse el mismo resultado de forma más legible con otros mensajes ya implementados para colecciones.
 
 <pre>
 Publication>>negativeVotes
@@ -184,7 +185,7 @@ En el caso de *#negativeVotes* la solución es muy similar, la única diferencia
 
 <pre>
 Publication>>negativeVotes
-	^votes reject: [ :vote | vote isLike ].
+	^ votes reject: [ :vote | vote isLike ].
 </pre>
 
 Con este *refactoring* se gana legibilidad y se expresa la intención del código de manera más clara.
@@ -397,8 +398,8 @@ PopularTodayQuestionRetriever>>retrieveQuestions: aUser
 	
 	popularTCol := OrderedCollection new.
 	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
-	
 	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
+	
 	temp := (popularTCol select:[:q | q positiveVotes size >= averageVotes ]) asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
 	
 	qRet := temp last: (100 min: temp size).
@@ -446,7 +447,7 @@ retrieveQuestionsFor: aUser from: aCollection
 	^qRet reject:[:q | q user = aUser].
 </pre>
 
-Se observa que esta porción de código se encuentra idénticamente en todas las subclases, por lo que la implementación del método puede estar definida en ***QuestionRetriever***, realizando **Pull Up Method**.
+Se observa que esta porción de código se encuentra en forma idéntica en todas las subclases, por lo que la implementación del método puede estar definida en ***QuestionRetriever***, realizando **Pull Up Method**.
 
 <pre>
 QuestionRetriever>>retrieveQuestionsFor: aUser from: aCollection
@@ -498,9 +499,9 @@ TopicsQuestionRetriever>>retrieveQuestions: aUser
 	temp := topicsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
 	^ self retrieveQuestionsFor: aUser from: temp. 
 </pre>
->La variable temporal *qRet* ya no es necesaria y se puede quitar de las 4 subclases.
+>La variable temporal *qRet* se vuelve innecesaria y se quita de las 4 subclases.
 
-En segundo lugar se extrae el código repetido para el paso 2 en un nuevo método, quedando conformado de la siguiente manera:
+En segundo lugar se extrae el código repetido para el paso 2 en un nuevo método conformado de la siguiente manera:
 
 <pre>
 sortQuestionsByVotes: aCollection
@@ -614,6 +615,6 @@ QuestionRetriever>>retrieveQuestions: aUser
 	^ self retrieveQuestionsFor: aUser from: temp. 
 </pre>
 
-De esta manera, queda formado un método template que generaliza los pasos del algoritmo, e implementa el código que comparten las subclases de **QuestionRetriever**. A su vez cada subclase implementa su comportamiento particular.
+De esta manera, queda formado un método template que generaliza los pasos del algoritmo, e implementa el comportamiento que comparten las subclases de **QuestionRetriever**. A su vez cada subclase redefine el paso 1 de forma particular.
 ____________________________________________________________________
 
