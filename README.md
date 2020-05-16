@@ -629,7 +629,8 @@ La forma de refactorizar esto es similar en todos los casos, consiste en determi
 
 A continuación se pueden ver los métodos con *Feature Envy* y sus respectivos *refactorings*.
 
-1.
+**QuestionRetriever>>sortQuestionsByVotes: questions**
+
 <pre>
 QuestionRetriever>>sortQuestionsByVotes: questions
 	^ questions asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
@@ -649,7 +650,8 @@ QuestionRetriever>>sortQuestionsByVotes: questions
 </pre>
 
 
-2.
+**QuestionRetriever>>retrieveQuestionsFor: aUser from: questions**
+
 <pre>
 QuestionRetriever>>retrieveQuestionsFor: aUser from: questions
 	| qRet |
@@ -699,7 +701,8 @@ QuestionRetriever>>retrieveQuestionsFor: aUser from: questions
 </pre>
 
 
-3.
+**NewsQuestionRetriever>>getQuestionsFor: aUser**
+
 <pre>
 NewsQuestionRetriever>>getQuestionsFor: aUser
 	| newsCol |
@@ -728,7 +731,8 @@ NewsQuestionRetriever>>getQuestionsFor: aUser
 </pre>
 
 
-4.
+**PopularTodayQuestionRetriever>>getQuestionsFor: aUser**
+
 <pre>
 PopularTodayQuestionRetriever>>getQuestionsFor: aUser
 	| popularTCol averageVotes |
@@ -741,7 +745,8 @@ PopularTodayQuestionRetriever>>getQuestionsFor: aUser
 </pre>
 	
 	
-5.
+**SocialQuestionRetriever>>getQuestionsFor: aUser**
+
 <pre>
 SocialQuestionRetriever>>getQuestionsFor: aUser
 	| followingCol |
@@ -752,7 +757,8 @@ SocialQuestionRetriever>>getQuestionsFor: aUser
 </pre>
 
 
-6.
+**TopicsQuestionRetriever>>getQuestionsFor: aUser**
+
 <pre>
 TopicsQuestionRetriever>>getQuestionsFor: aUser
 	| topicsCol |
