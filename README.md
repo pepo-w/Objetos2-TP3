@@ -619,3 +619,13 @@ QuestionRetriever>>retrieveQuestions: aUser
 De esta manera, queda formado un método template que generaliza los pasos del algoritmo, e implementa el comportamiento que comparten las subclases de **QuestionRetriever**. A su vez cada subclase redefine el paso 1 de forma particular.
 ____________________________________________________________________
 
+Se me ocurre que podemos usar **Encapsulate Collection** en las clases que tienen getters para colecciones. Para el caso de Smalltalk sería retornar una copia.
+#answers --> ^ answers copy. en vez de ^ answers.
+en algunos casos tambien se podria usar **Self Encapsulate Field**. por ejemplo
+User>>questionsOfInterest
+	^ questionRetriever retrieveQuestions: self.
+podria ser
+User>>questionsOfInterest
+	^ self questionRetriever retrieveQuestions: self.
+(ya tiene implementado el getter)
+
