@@ -1,6 +1,6 @@
 # Objetos2-TP3 
 ## REGISTRO DE BAD SMELLS Y REFACTORING
-#### *Bad smell*: Duplicated Code 
+### *Bad smell*: Duplicated Code 
 
 Encontramos que las clases **Answer** y **Question** tienen atributos en común (variables de instancia: *timestamp, description, user* y *votes*) y también ambas clases responden a los mensajes *#addVote:, #positiveVotes, #negativeVotes*, con idéntica funcionalidad.
 
@@ -152,7 +152,7 @@ Question>>initialize
 >**Question** realiza un *LookUp* hacia la superclase para instanciar *votes* y *timestamp*, y luego inicializa sus otros atributos. Por su parte, **Answer** ya no necesita su propio *>>initialize*.
 ________________________________________________________
 
-#### *Bad smell*: Reinventando la rueda
+### *Bad smell*: Reinventando la rueda
 
 Se itera sobre la colección *votes* con *#do:*, cuando puede obtenerse el mismo resultado de forma más legible con otros mensajes ya implementados para colecciones.
 
@@ -190,7 +190,7 @@ Publication>>negativeVotes
 
 ____________________________________________________________________
 
-#### *Bad smell*: Switch Statements
+### *Bad smell*: Switch Statements
 
 Analizando el método *#retrieveQuestions: aUser* de la clase **QuestionRetriever**, observamos que el código consiste principalmente en una secuencia de "if option = #symbol", y en cada caso realiza una serie de operaciones para retornar una colección de instancias de **Question** (según distintos criterios). Esto se considera una mala práctica en OO, ya que puede obtenerse el mismo funcionamiento aplicando polimorfismo. 
 
@@ -370,7 +370,7 @@ QuestionRetrieverTest>>setUp
 
 ____________________________________________________________________
 
-#### *Bad smell*: Duplicated Code
+### *Bad smell*: Duplicated Code
 
 En las subclases de ***QuestionRetriever*** se puede observar que hay código duplicado en el método *#retrieveQuestions: aUser*, con algunas particularidades que los diferencian. Identificamos que, de forma general, el algoritmo sigue los mismos pasos, y en el mismo orden:
 1. Obtener una colección de instancias de **Question**, relevantes para cada subclase (ya sea desde el parámetro *aUser* o la variable de instancia *cuoora*).
@@ -649,7 +649,7 @@ De esta manera queda formado un método template que generaliza los pasos del al
 Esta forma de organizar el código aporta a que el modelo sea *escalable*: si se decidieran agregar nuevas subclases de ***QuestionRetriever***, que obtengan questions bajo nuevos "criterios", basta con utilizar el template method redefiniendo en la nueva subclase aquellos pasos que deben hacerse de forma diferente.
 ____________________________________________________________________
 
-#### *Bad smell*: Feature Envy
+### *Bad smell*: Feature Envy
 
 Observamos que ***QuestionRetriever*** y sus subclases tienen varios métodos que presentan este bad smell. En pocas palabras, en estos métodos se realizan operaciones con atributos y mensajes que pertenecen (la mayoría) a las clases **User** y **CuOOra**. Es decir, le "piden" datos que necesitan de estas clases para realizar distintas operaciones. 
 Esto se considera un bad smell, ya que la responsabilidad de implementar una funcionalidad debe recaer en las clases que poseen los datos necesarios para llevar a cabo dicha funcionalidad. 
