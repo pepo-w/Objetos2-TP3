@@ -666,7 +666,7 @@ QuestionRetriever>>sortQuestionsByVotes: questions
 	^ questions asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
 </pre>
 
-En este caso ***QuestionRetriever*** obtiene la colección de votos positivos de cada respuesta, para luego calcular su tamaño.
+*Feature Envy*: ***QuestionRetriever*** accede la colección de votos positivos de **Question**, para luego calcular su tamaño.
 
 *Refactoring*: delegar la responsabilidad de hacer este cálculo a la clase **Publication** (ya que tanto **Question** como **Answer** tienen una colección de votos positivos).
 
@@ -688,7 +688,7 @@ QuestionRetriever>>rejectQuestionsWithAuthor: aUser from: questions
 	^ questions reject: [ :q | q user = aUser ].
 </pre>
 
-En este caso el *Feature Envy* es que se accede a la variable privada *user* de cada *question* para verificar si es el mismo user recibido como parámetro.
+*Feature Envy*: ***QuestionRetriever*** accede a la variable *user* de **Question** para verificar si es el mismo user recibido como parámetro.
 
 *Refactoring*: se delega a **Publication** la tarea de verificar si *aUser* es el *user* asociado a un objeto *question* o *answer*.
 
@@ -714,9 +714,9 @@ NewsQuestionRetriever>>getQuestionsFor: aUser
 	^ newsCol
 </pre>
 
-En este método se observan dos casos de *Feature Envy*: por un lado **NewsQuestionRetriever** accede a la variable *questions* de *cuoora* para realizar una operación sobre la colección (además se itera con *do:*, con olor a **Reinventando la Rueda**), y por otro lado se accede a la variable *timestamp* de cada *question* de la colección para verificar que sea del día actual. 
+En este método se observan dos casos de *Feature Envy*: por un lado **NewsQuestionRetriever** accede a la variable *questions* de **CuOOra** para realizar una operación sobre la colección (además se itera con *#do:*, con olor a **Reinventando la Rueda**), y por otro lado se accede a la variable *timestamp* de **Question** para verificar que sea del día actual. 
 
-*Refactoring*: se delega a **Publication** la responsabilidad de verificar si un objeto *answer* o *question* fue instanciado en el día actual. Y se delega a **CuOOra** la tarea de obtener preguntas del día, utilizando *select:* en lugar de *do:*. También se elimina la variable temporal | newsCol |. Luego se simplifica el método reemplazando la variable |newsCol| por una llamada al mensaje de *quoora*.
+*Refactoring*: se delega a **Publication** la responsabilidad de verificar si un objeto *answer* o *question* fue instanciado en el día actual. Y se delega a **CuOOra** la tarea de obtener preguntas del día, utilizando *#select:* en lugar de *#do:*. Luego se simplifica el método reemplazando la variable |newsCol| por una llamada al mensaje de *quoora*.
 
 <pre>
 Publication>>isFromToday
@@ -747,7 +747,7 @@ PopularTodayQuestionRetriever>>getQuestionsFor: aUser
 	
 </pre>
 
-En este caso el *Feature Envy* se da porque **PopularTodayQuestionRetriever** accede a la variable *questions* de *cuoora* para seleccionar aquellas que sean del día actual (ya refactorizado con *#todayQuestions*), y luego realiza un cálculo de promedio con dicha colección para finalmente filtrar aquellas preguntas con votos positivos superiores al promedio.
+*Feature Envy*: **PopularTodayQuestionRetriever** accede a la variable *questions* de **CuOOra** para seleccionar aquellas que sean del día actual (ya refactorizado con *#todayQuestions*), y luego realiza un cálculo de promedio con dicha colección para finalmente filtrar aquellas preguntas con votos positivos superiores al promedio.
 
 *Refactoring*: Se delega a **CuOOra** la tarea de obtener las preguntas del día que superen el promedio de votos positivos (así como también la tarea de calcular dicho promedio). 
 
@@ -774,8 +774,22 @@ SocialQuestionRetriever>>getQuestionsFor: aUser
 	| followingCol |
 	
 	followingCol := OrderedCollection new.
-	aUser following do: [ :follow | followingCol addAll: follow questions ]. "aUser followingQuestions"
+	aUser following do: [ :follow | followingCol addAll: follow questions ]. 
 	^ followingCol
+</pre>
+
+*Feature Envy*: **SocialQuestionRetriever** accede a la colección *following* de **User** para obtener las questions de cada uno de los users a los que sigue *aUser*.
+
+*Refactoring*: se delega a **User** la función de obtener las preguntas de los usuarios que sigue, utilizando *#flatCollect:* en lugar de *#do:*. Luego se reemplaza la variable |followingCol| por una llamada al mensaje de *aUser*.
+
+<pre>
+User>>followingQuestions
+	^ self following flatCollect: [ :f | f questions ]. 
+</pre>
+
+<pre>
+SocialQuestionRetriever>>getQuestionsFor: aUser
+	^ aUser followingQuestions. 
 </pre>
 
 
@@ -786,7 +800,20 @@ TopicsQuestionRetriever>>getQuestionsFor: aUser
 	| topicsCol |
 	
 	topicsCol := OrderedCollection new.
-	aUser topics do: [ :topic | topicsCol addAll: topic questions ]. "aUser topicsQuestions"
+	aUser topics do: [ :topic | topicsCol addAll: topic questions ]. 
 	^ topicsCol
 </pre>
 
+*Feature Envy*: **TopicsQuestionRetriever** accede a la colección *topics* de **User** para obtener las questions que tiene cada *topic*.
+
+*Refactoring*: se delega a **User** la función de obtener las preguntas de los topicos que tiene, utilizando *#flatCollect:* en lugar de *#do:*. Luego se reemplaza la variable |topicsCol| por una llamada al mensaje de *aUser*.
+
+<pre>
+User>>topicsQuestions
+	^ self topics flatCollect: [ :t | t questions ].
+</pre>
+
+<pre>
+User>>getQuestionsFor: aUser
+	^ aUser topicsQuestions.
+</pre>
