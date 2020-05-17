@@ -60,6 +60,12 @@ User >> following [
 	^ following
 ]
 
+{ #category : #'as yet unclassified' }
+User >> followingQuestions [
+	
+	^ self following flatCollect: [ :f | f questions ]. 
+]
+
 { #category : #initialize }
 User >> initialize [
 
@@ -103,6 +109,12 @@ User >> questionsOfInterest [
 { #category : #accessing }
 User >> topics [
 	^ topics
+]
+
+{ #category : #'as yet unclassified' }
+User >> topicsQuestions [
+	
+	^ self topics flatCollect: [ :t | t questions ].
 ]
 
 { #category : #accessing }
