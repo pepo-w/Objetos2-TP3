@@ -1,5 +1,6 @@
 # Objetos2-TP3 
 ## REGISTRO DE BAD SMELLS Y REFACTORING
+____________________________________________________________________
 ### *Bad smell*: Duplicated Code 
 
 Encontramos que las clases **Answer** y **Question** tienen atributos en común (variables de instancia: *timestamp, description, user* y *votes*) y también ambas clases responden a los mensajes *#addVote:, #positiveVotes, #negativeVotes*, con idéntica funcionalidad.
