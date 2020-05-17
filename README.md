@@ -131,7 +131,7 @@ Publication>>addVote: aVote
 	votes add: aVote
 </pre>
 
-También se promocionaron a la superclase los *getters* y *setters* que tenían en común dichas clases.
+También se promocionaron a la superclase los *getters* y *setters* que tenían en común.
 
 3. *Refactoring*: **Pull Up Constructor Body**
 
@@ -149,12 +149,12 @@ Question>>initialize
 	answers := OrderedCollection new.
 	topics := OrderedCollection new.
 </pre>
->**Question** realiza un *LookUp* hacia la superclase para instanciar *votes* y *timestamp*, y luego inicializa sus atributos particulares. Por su parte, **Answer** ya no necesita su propio *>>initialize*.
+>**Question** realiza un *LookUp* hacia la superclase para instanciar *votes* y *timestamp*, y luego inicializa sus otros atributos. Por su parte, **Answer** ya no necesita su propio *>>initialize*.
 ________________________________________________________
 
 #### *Bad smell*: Reinventando la rueda
 
-Se itera sobre la colección *votes* con '*do:*', cuando puede obtenerse el mismo resultado de forma más legible con otros mensajes ya implementados para colecciones.
+Se itera sobre la colección *votes* con *#do:*, cuando puede obtenerse el mismo resultado de forma más legible con otros mensajes ya implementados para colecciones.
 
 <pre>
 Publication>>negativeVotes
@@ -174,21 +174,19 @@ Publication>>positiveVotes
 
 *Refactoring*: **Substitute Algorithm**.
 
-Se utiliza *select:* en lugar de *do*, eliminando la expresión *ifTrue:*, y se retorna el resultado de la operación. Se elimina también la variable local. 
+Se utiliza *#select:* en lugar de *#do:*, eliminando la expresión *ifTrue:*, y se retorna el resultado de la operación. Se elimina también la variable local |r|. 
 
 <pre>
 Publication>>positiveVotes
 	^ votes select: [ :vote | vote isLike ].
 </pre>
 
-En el caso de *#negativeVotes* la solución es muy similar, la única diferencia es que se utiliza el mensaje *reject:*:
+En el caso de *#negativeVotes* la solución es muy similar, la única diferencia es que se utiliza el mensaje *#reject:*
 
 <pre>
 Publication>>negativeVotes
 	^ votes reject: [ :vote | vote isLike ].
 </pre>
-
-Con este *refactoring* se gana legibilidad y se expresa la intención del código de manera más clara.
 
 ____________________________________________________________________
 
@@ -237,7 +235,7 @@ QuestionRetriever>>retrieveQuestions: aUser
 
 1. *Refactoring*: **Replace Type Code With Subclasses**.
 
-Type Code: se utiliza una serie de símbolos (*#social, #topics, #news, #popularToday*) como los valores permitidos de la variable de instancia *-option*. Estos símbolos afectan directamente el comportamiento del método (se evalúa *-option* en los condicionales).
+Type Code: se utiliza una serie de símbolos (*#social, #topics, #news, #popularToday*) como los valores permitidos de la variable de instancia *option*. Estos símbolos afectan directamente el comportamiento del método (se evalúa *option* en los condicionales).
 
 En primer lugar creamos una subclase de **QuestionRetriever** por cada uno de los símbolos mencionados.
 
@@ -270,7 +268,7 @@ QuestionRetriever subclass: #PopularTodayQuestionRetriever
 2. *Refactoring*: **Replace Conditional With Polymorphism**.
 
 A continuación utilizamos **Extract Method** para el código asociado a cada uno de los símbolos *#social, #topics, #news, #popularToday*, y los implementamos en las respectivas subclases usando **Move Method**, bajo la firma *#RetrieveQuestions: aUser*. 
-Para cada subclase se utilizarán sólo las variables temporales que necesite, y se incluye el retorno del método: <code>^qRet reject:[:q | q user = aUser].</code> , dado que es común para todas las subclases.
+Para cada subclase se utilizarán sólo las variables temporales que necesite, y se incluye el retorno del método: <code>^qRet reject:[:q | q user = aUser].</code> , que es común para todas las subclases.
 
 <pre>
 SocialQuestionRetriever>>retrieveQuestions: aUser
@@ -357,7 +355,8 @@ QuestionRetrieverTest>>setUp
 </pre>
 
 Dado que ahora ***QuestionRetriever*** es una clase abstracta, sería incorrecto instanciarla. 
-Para solucionar esto sin alterar la funcionalidad de los test, reescribimos el código para que se instancie, en cada caso, un objeto de las subclases de QuestionRetriever. Se utiliza el constructor de la superclase que recibe como parámetro una instancia de cuoora.
+Para solucionar esto sin alterar la funcionalidad de los test, reescribimos el código para que se instancie, en cada caso, un objeto de las subclases de QuestionRetriever. 
+**Substitute Algorithm**: Se utiliza el constructor de la superclase que recibe como parámetro una instancia de cuoora.
 
 <pre>
 QuestionRetrieverTest>>setUp
@@ -472,14 +471,14 @@ QuestionRetriever>>rejectQuestionsWithAuthor: aUser from: questions
 	^ questions reject: [ :q | q user = aUser ].
 </pre>
 
-Finalmente aplicamos **Replace Temp With Query** para remover la variable local | qRet |. 
+Finalmente aplicamos **Replace Temp With Query** para remover la variable local |qRet|. 
 
 <pre>
 QuestionRetriever>>retrieveQuestionsFor: aUser from: questions
 	^ self rejectQuestionsWithAuthor: aUser from: (self lastQuestions: questions).
 </pre>
 
-Una vez implementado el **paso 3** en la superclase (que a su vez consiste en dos "sub-pasos"), se reemplaza el código correspondiente por una invocación en el método *retrieveQuestions: aUser* de las subclases. También se elimina la variable temporal *qRet*.
+Una vez implementado el **paso 3** en la superclase (que a su vez consiste en dos "sub-pasos"), se reemplaza el código correspondiente por una invocación en el método *retrieveQuestions: aUser* de las subclases. También se elimina la variable temporal |qRet|.
 
 <pre>
 NewsQuestionRetriever>>retrieveQuestions: aUser
@@ -574,7 +573,7 @@ TopicsQuestionRetriever>>retrieveQuestions: aUser
 	^ self retrieveQuestionsFor: aUser from: questions
 </pre>
 
-Por último se realiza el **Extract Method** para el **paso 1** en cada subclase, pero en este caso no se realiza el **Pull Up Method** ya que cada subclase implementa este paso de una forma particular. En cambio, se implementa *getQuestionsFor: aUser* como un método abstracto en la superclase **QuestionRetriever**.
+Por último se realiza el **Extract Method** para el **paso 1** en cada subclase, pero en este caso no se realiza el **Pull Up Method** ya que cada subclase implementa este paso de una forma particular. En cambio, se implementa *getQuestionsFor: aUser* como un método abstracto en la superclase ***QuestionRetriever***.
 
 <pre>
 QuestionRetriever>>getQuestionsFor: aUser
@@ -630,7 +629,7 @@ QuestionRetriever>>retrieveQuestions: aUser
 	^ self retrieveQuestionsFor: aUser from: questions. 
 </pre>
 
-Notamos que los pasos 1 y 2 se realizan en la misma línea, y luego se realiza el paso 3. Considerando que los pasos 2 y 3 son iguales para todas las subclases, y que el paso 1 es particular a cada una, creemos que sería más conveniente agrupar los pasos 2 y 3. De hecho si analizamos el comportamiento de cada uno encontramos algo en común: ambos "preparan" o "le dan un formato" la colección de questions antes de retornarla.
+Notamos que los pasos 1 y 2 se realizan en la misma línea, y luego se realiza el paso 3. Considerando que los pasos 2 y 3 son iguales para todas las subclases, y que el paso 1 es particular a cada una, creemos que sería más conveniente agrupar los pasos 2 y 3. De hecho, si analizamos el comportamiento de cada uno encontramos algo en común: ambos "preparan" o "le dan un formato" la colección de questions antes de retornarla.
 Utilizando **Move Method** reorganizamos el código de la siguiente manera:
 
 <pre>
@@ -646,16 +645,17 @@ QuestionRetriever>>retrieveQuestions: aUser
 	^ self retrieveQuestionsFor: aUser from: (self getQuestionsFor: aUser).
 </pre>
 
-De esta manera queda formado un método template que generaliza los pasos del algoritmo, e implementa el comportamiento que comparten las subclases de **QuestionRetriever** (pasos 2 y 3). A su vez cada subclase redefine el paso 1 de forma particular. 
-Esta forma de organizar el código aporta a que el modelo sea *escalable*: si se decidieran agregar nuevas subclases de **QuestionRetriever**, que obtengan questions bajo nuevos "criterios", basta con utilizar el template method redefiniendo en la nueva subclase aquellos pasos que deben hacerse de forma diferente.
+De esta manera queda formado un método template que generaliza los pasos del algoritmo, e implementa el comportamiento que comparten las subclases de ***QuestionRetriever*** (pasos 2 y 3). A su vez cada subclase redefine el paso 1 de forma particular. 
+Esta forma de organizar el código aporta a que el modelo sea *escalable*: si se decidieran agregar nuevas subclases de ***QuestionRetriever***, que obtengan questions bajo nuevos "criterios", basta con utilizar el template method redefiniendo en la nueva subclase aquellos pasos que deben hacerse de forma diferente.
 ____________________________________________________________________
 
 #### *Bad smell*: Feature Envy
 
-Observamos que **QuestionRetriever** y sus subclases tienen varios métodos que presentan este bad smell. En pocas palabras, en estos métodos se realizan operaciones con atributos y mensajes que pertenecen (la mayoría) a las clases **User** y **CuOOra**. Es decir, le "piden" datos que necesitan de estas clases para realizar distintas operaciones. 
+Observamos que ***QuestionRetriever*** y sus subclases tienen varios métodos que presentan este bad smell. En pocas palabras, en estos métodos se realizan operaciones con atributos y mensajes que pertenecen (la mayoría) a las clases **User** y **CuOOra**. Es decir, le "piden" datos que necesitan de estas clases para realizar distintas operaciones. 
 Esto se considera un bad smell, ya que la responsabilidad de implementar una funcionalidad debe recaer en las clases que poseen los datos necesarios para llevar a cabo dicha funcionalidad. 
 
-La forma de refactorizar es similar en todos los casos, consiste en determinar quién tiene la responsabilidad de cada operación, para luego delegar la implementación a la clase que corresponda con **Extract Method** y **Move Method**.
+La forma de refactorizar es similar en todos los casos, consiste en determinar quién tiene la responsabilidad de cada operación, para luego delegar la implementación a la clase que corresponda con **Extract Method** y **Move Method**. 
+Además utilizamos **Self Encapsulate Field**, aprovechando que ya tienen implementados los *getter*, para que cada clase acceda a sus variables privadas mediante su *getter* en vez de acceder directamente a la variable. (con esto se gana flexibilidad: si se quisiera cambiar la forma en la que se obtiene la variable, por ejemplo una colección filtrada, sólo se debe modificar el *getter*, sin preocuparnos por los métodos que lo invocan).
 
 A continuación se pueden ver los métodos con *Feature Envy* y sus respectivos *refactorings*.
 
@@ -666,9 +666,9 @@ QuestionRetriever>>sortQuestionsByVotes: questions
 	^ questions asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
 </pre>
 
-*Feature Envy*: ***QuestionRetriever*** accede la colección de votos positivos de **Question**, para luego calcular su tamaño.
+*Feature Envy*: ***QuestionRetriever*** accede la colección de votos positivos de **Question**, para comparar questions según su cantidad de votos positivos.
 
-*Refactoring*: delegar la responsabilidad de hacer este cálculo a la clase **Publication** (ya que tanto **Question** como **Answer** tienen una colección de votos positivos).
+*Refactoring*: delegar la responsabilidad de comparar questions para determinar cúal tiene más votos positivos a la clase **Publication** (ya que tanto **Question** como **Answer** tienen una colección de votos positivos).
 
 <pre>
 Publication>>sizeOfPositiveVotes
@@ -676,9 +676,16 @@ Publication>>sizeOfPositiveVotes
 </pre>
 
 <pre>
-QuestionRetriever>>sortQuestionsByVotes: questions
-	^ questions asSortedCollection: [ :a :b | a sizeOfPositiveVotes > b sizeOfPositiveVotes ].
+Publication>>hasMorePositiveVotesThan: aPublication
+	^ self sizeOfPositiveVotes > aPublication sizeOfPositiveVotes.
 </pre>
+
+<pre>
+QuestionRetriever>>sortQuestionsByVotes: questions
+	^ questions asSortedCollection: [ :a :b | a hasMorePositiveVotesThan: b ].
+</pre>
+
+>**Nota**: también se podría haber redefinido el mensaje **>**, para establecer la forma en la que se comparan dos publicaciones. Pero creímos más conveniente hacerlo de esta forma porque en el futuro podría haber distintas formas de comparar publicaciones (por ejemplo, segun sus votos negativos). 
 
 
 **QuestionRetriever>>rejectQuestionsWithAuthor: aUser from: questions**
@@ -716,7 +723,7 @@ NewsQuestionRetriever>>getQuestionsFor: aUser
 
 En este método se observan dos casos de *Feature Envy*: por un lado **NewsQuestionRetriever** accede a la variable *questions* de **CuOOra** para realizar una operación sobre la colección (además se itera con *#do:*, con olor a **Reinventando la Rueda**), y por otro lado se accede a la variable *timestamp* de **Question** para verificar que sea del día actual. 
 
-*Refactoring*: se delega a **Publication** la responsabilidad de verificar si un objeto *answer* o *question* fue instanciado en el día actual. Y se delega a **CuOOra** la tarea de obtener preguntas del día, utilizando *#select:* en lugar de *#do:*. Luego se simplifica el método reemplazando la variable |newsCol| por una llamada al mensaje de *quoora*.
+*Refactoring*: se delega a **Publication** la responsabilidad de verificar si un objeto *answer* o *question* fue instanciado en el día actual. Y se delega a **CuOOra** la tarea de obtener preguntas del día, utilizando *#select:* en lugar de *#do:* (**Substitute Algorithm**). Luego se simplifica el método reemplazando la variable |newsCol| por una llamada al mensaje de *quoora*.
 
 <pre>
 Publication>>isFromToday
@@ -749,11 +756,11 @@ PopularTodayQuestionRetriever>>getQuestionsFor: aUser
 
 *Feature Envy*: **PopularTodayQuestionRetriever** accede a la variable *questions* de **CuOOra** para seleccionar aquellas que sean del día actual (ya refactorizado con *#todayQuestions*), y luego realiza un cálculo de promedio con dicha colección para finalmente filtrar aquellas preguntas con votos positivos superiores al promedio.
 
-*Refactoring*: Se delega a **CuOOra** la tarea de obtener las preguntas del día que superen el promedio de votos positivos (así como también la tarea de calcular dicho promedio). 
+*Refactoring*: Se delega a **CuOOra** la tarea de obtener las preguntas del día que superen el promedio de votos positivos (así como también la tarea de calcular dicho promedio). También aplicamos **Substitute Algorithm** para utilizar *#sumNumbers:* en lugar de *#sum:* (consideramos que es una mejor implementación).
 
 <pre>
 CuOOra>>averageVotes
-	^ (questions sumNumbers: [:q | q sizeOfPositiveVotes ]) / self todayQuestions size.
+	^ (self questions sumNumbers: [:q | q sizeOfPositiveVotes ]) / self todayQuestions size.
 </pre>
 
 <pre>
@@ -780,7 +787,7 @@ SocialQuestionRetriever>>getQuestionsFor: aUser
 
 *Feature Envy*: **SocialQuestionRetriever** accede a la colección *following* de **User** para obtener las questions de cada uno de los users a los que sigue *aUser*.
 
-*Refactoring*: se delega a **User** la función de obtener las preguntas de los usuarios que sigue, utilizando *#flatCollect:* en lugar de *#do:*. Luego se reemplaza la variable |followingCol| por una llamada al mensaje de *aUser*.
+*Refactoring*: se delega a **User** la función de obtener las preguntas de los usuarios que sigue, utilizando *#flatCollect:* en lugar de *#do:* (**Substitute Algorithm**). Luego se reemplaza la variable |followingCol| por una llamada al mensaje de *aUser*.
 
 <pre>
 User>>followingQuestions
@@ -806,7 +813,7 @@ TopicsQuestionRetriever>>getQuestionsFor: aUser
 
 *Feature Envy*: **TopicsQuestionRetriever** accede a la colección *topics* de **User** para obtener las questions que tiene cada *topic*.
 
-*Refactoring*: se delega a **User** la función de obtener las preguntas de los topicos que tiene, utilizando *#flatCollect:* en lugar de *#do:*. Luego se reemplaza la variable |topicsCol| por una llamada al mensaje de *aUser*.
+*Refactoring*: se delega a **User** la función de obtener las preguntas de los topicos que tiene, utilizando *#flatCollect:* en lugar de *#do:* (**Substitute Algorithm**). Luego se reemplaza la variable |topicsCol| por una llamada al mensaje de *aUser*.
 
 <pre>
 User>>topicsQuestions
