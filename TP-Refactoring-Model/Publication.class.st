@@ -25,12 +25,12 @@ Publication >> description: anObject [
 	description := anObject
 ]
 
-{ #category : #testing }
+{ #category : #boolean }
 Publication >> hasMorePositiveVotesThan: aPublication [
 	^ self sizeOfPositiveVotes > aPublication sizeOfPositiveVotes.
 ]
 
-{ #category : #testing }
+{ #category : #boolean }
 Publication >> hasTheAuthor: aUser [
 	^ self user = aUser.
 ]
@@ -41,22 +41,22 @@ Publication >> initialize [
 	timestamp := DateAndTime now.
 ]
 
-{ #category : #testing }
+{ #category : #boolean }
 Publication >> isFromToday [
 	^ self timestamp asDate = Date today.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'collection getters' }
 Publication >> negativeVotes [
 	^ votes reject: [ :vote | vote isLike ].
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'collection getters' }
 Publication >> positiveVotes [
 	^ votes select: [ :vote | vote isLike ].
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #calculating }
 Publication >> sizeOfPositiveVotes [
 	^ self positiveVotes size.
 ]

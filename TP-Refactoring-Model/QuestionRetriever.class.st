@@ -17,7 +17,7 @@ QuestionRetriever >> cuoora: aCuooraInstance [
 	cuoora := aCuooraInstance 
 ]
 
-{ #category : #retrieving }
+{ #category : #abstract }
 QuestionRetriever >> getQuestionsFor: aUser [
 
 	^ self subclassResponsibility.
@@ -35,7 +35,7 @@ QuestionRetriever >> rejectQuestionsWithAutor: aUser from: questions [
 	^ questions reject: [ :q | q hasTheAuthor: aUser ].
 ]
 
-{ #category : #retrieving }
+{ #category : #'template ' }
 QuestionRetriever >> retrieveQuestions: aUser [
 
 	^ self retrieveQuestionsFor: aUser from: (self getQuestionsFor: aUser).

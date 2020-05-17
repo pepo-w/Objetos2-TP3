@@ -49,12 +49,12 @@ CuOOra >> questions [
 	^ questions
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'collection getters' }
 CuOOra >> todayQuestions [
 	^ questions select: [ :q | q isFromToday ].
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'collection getters' }
 CuOOra >> todayQuestionsAboveAverage [
 	^ self todayQuestions select: [ :q | q sizeOfPositiveVotes >= self averageVotes ].
 ]

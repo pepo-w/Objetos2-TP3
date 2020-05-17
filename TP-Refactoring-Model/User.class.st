@@ -23,24 +23,24 @@ User class >> username: aUsername password: aPassword questionRetriever: aQuesti
 		yourself
 ]
 
-{ #category : #accessing }
+{ #category : #adding }
 User >> addAnswer: anAnswer [
 	answers add: anAnswer 
 
 ]
 
-{ #category : #accessing }
+{ #category : #adding }
 User >> addQuestion: aQuestion [
 	questions add: aQuestion
 ]
 
-{ #category : #accessing }
+{ #category : #adding }
 User >> addTopic: aTopic [
 	topics add: aTopic 
 
 ]
 
-{ #category : #accessing }
+{ #category : #adding }
 User >> addVote: aVote [
 	votes add: aVote
 ]
@@ -60,7 +60,7 @@ User >> following [
 	^ following
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'collection getters' }
 User >> followingQuestions [
 	
 	^ self following flatCollect: [ :f | f questions ]. 
@@ -101,7 +101,7 @@ User >> questions [
 	^ questions
 ]
 
-{ #category : #accessing }
+{ #category : #'collection getters' }
 User >> questionsOfInterest [
 	^ questionRetriever retrieveQuestions: self.
 ]
@@ -111,7 +111,7 @@ User >> topics [
 	^ topics
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'collection getters' }
 User >> topicsQuestions [
 	
 	^ self topics flatCollect: [ :t | t questions ].
