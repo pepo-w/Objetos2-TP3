@@ -32,6 +32,11 @@ CuOOra >> addUser: aUser [
 
 ]
 
+{ #category : #private }
+CuOOra >> averageVotes [
+	^ (questions sumNumbers: [:q | q sizeOfPositiveVotes ]) / self todayQuestions size.
+]
+
 { #category : #initialize }
 CuOOra >> initialize [
 	users := OrderedCollection new.
@@ -47,6 +52,11 @@ CuOOra >> questions [
 { #category : #'as yet unclassified' }
 CuOOra >> todayQuestions [
 	^ questions select: [ :q | q isFromToday ].
+]
+
+{ #category : #'as yet unclassified' }
+CuOOra >> todayQuestionsAboveAverage [
+	^ self todayQuestions select: [ :q | q sizeOfPositiveVotes >= self averageVotes ].
 ]
 
 { #category : #accessing }
