@@ -265,7 +265,7 @@ QuestionRetriever subclass: #PopularTodayQuestionRetriever
 	classVariableNames: ''
 </pre>
 
->**QuestionRetriever** ahora es una clase Abstracta
+>***QuestionRetriever*** ahora es una clase Abstracta
 
 2. *Refactoring*: **Replace Conditional With Polymorphism**.
 
@@ -327,11 +327,11 @@ PopularTodayQuestionRetriever>>retrieveQuestions: aUser
 
 Una vez que el método se encuentra redefinido por todas las subclases, modificamos el método en la superclase para que el mismo sea abstracto. 
 <pre>
-QuestionRetriever(Abstract)>>retrieveQuestions: aUser
+QuestionRetriever>>retrieveQuestions: aUser
 	^ self subclassResponsibility.
 </pre>
 
-Es claro que ya no es necesario utilizar símbolos y condicionales, gracias al uso de polimorfismo, y por lo tanto la variable de instancia *-option* que ahora heredan las subclases ya no se utiliza. Tanto la variable como su setter *#option: anOption*, tienen olor a **Dead Code** (por el hecho de que ya no se usan), y en consecuencia *#initialize* y uno de los constructores de clase dejan de tener sentido.
+En este punto vemos que ya no es necesario utilizar símbolos y condicionales, gracias al uso de polimorfismo, y por lo tanto la variable de instancia *option* que ahora heredan las subclases ya no se utiliza. Tanto la variable como su setter *#option: anOption*, tienen olor a **Dead Code** (por el hecho de que ya no se usan), y en consecuencia *#initialize* y uno de los constructores de clase dejan de tener sentido.
 
 <pre>
 QuestionRetriever>>initialize
@@ -343,7 +343,7 @@ QuestionRetriever(Class side)>>new: cuoora and: aSymbol
 	^ self new cuoora: cuoora; option:aSymbol; yourself.
 </pre>
 
-Para este refactoring simplemente eliminamos la variable *-option* y los métodos mencionados. 
+Para este refactoring simplemente eliminamos la variable *option* y los métodos mencionados. 
 Al ejecutar los tests correspondientes luego del refactoring, encontramos que los test fallaron dado que el constructor eliminado era utilizado en el setUp de **QuestionRetrieverTest**:
 
 <pre>
@@ -356,7 +356,7 @@ QuestionRetrieverTest>>setUp
    popularTodayRetriever := QuestionRetriever new: cuoora and: #popularToday.
 </pre>
 
-Dado que ahora **QuestionRetriever** es una clase abstracta, sería incorrecto instanciarla. 
+Dado que ahora ***QuestionRetriever*** es una clase abstracta, sería incorrecto instanciarla. 
 Para solucionar esto sin alterar la funcionalidad de los test, reescribimos el código para que se instancie, en cada caso, un objeto de las subclases de QuestionRetriever. Se utiliza el constructor de la superclase que recibe como parámetro una instancia de cuoora.
 
 <pre>
@@ -373,21 +373,24 @@ ____________________________________________________________________
 
 #### *Bad smell*: Duplicated Code
 
-En las subclases de **QuestionRetriever** se puede observar que hay código duplicado en el método *#retrieveQuestions: aUser*, con algunas particularidades que los diferencian. Identificamos que, de forma general, el algoritmo sigue los mismos pasos, y en el mismo orden:
-1. Obtener una colección de instancias de **Question**, relevantes para cada subclase (ya sea desde el parámetro *aUser* o la variable de instancia *-cuoora*).
-2. Ordenar dicha colección en forma ascendente según la cantidad de votos positivos de cada instancia.
-3. Filtrar la colección, retornando una colección con las últimas 100 questions que no contenga las questions realizadas por *aUser*.
+En las subclases de ***QuestionRetriever*** se puede observar que hay código duplicado en el método *#retrieveQuestions: aUser*, con algunas particularidades que los diferencian. Identificamos que, de forma general, el algoritmo sigue los mismos pasos, y en el mismo orden:
+1. Obtener una colección de instancias de **Question**, relevantes para cada subclase (ya sea desde el parámetro *aUser* o la variable de instancia *cuoora*).
+2. Ordenar dicha colección en forma ascendente según la cantidad de votos positivos de cada question.
+3. Filtrar la colección para retornar las últimas 100 questions (o todas si son menos de 100) que no fueron realizadas por *aUser*.
 
 <pre>
 NewsQuestionRetriever>>retrieveQuestions: aUser
 	| qRet temp newsCol |
 	
+	"paso 1"
 	qRet := OrderedCollection new.	
 	newsCol := OrderedCollection new.
 	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
 	
+	"paso 2"
 	temp := newsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
 	
+	"paso 3"
 	qRet := temp last: (100 min: temp size).
 	^qRet reject:[:q | q user = aUser].
 </pre>
@@ -396,12 +399,15 @@ NewsQuestionRetriever>>retrieveQuestions: aUser
 PopularTodayQuestionRetriever>>retrieveQuestions: aUser
 	| qRet temp popularTCol averageVotes |
 	
+	"paso 1"
 	popularTCol := OrderedCollection new.
 	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
 	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
 	
+	"paso 2 (y un poco de paso 1)"
 	temp := (popularTCol select:[:q | q positiveVotes size >= averageVotes ]) asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
 	
+	"paso 3"
 	qRet := temp last: (100 min: temp size).
 	^qRet reject:[:q | q user = aUser].
 </pre>
@@ -411,11 +417,14 @@ PopularTodayQuestionRetriever>>retrieveQuestions: aUser
 SocialQuestionRetriever>>retrieveQuestions: aUser
 	| qRet temp followingCol |
 	
+	"paso 1"
 	followingCol := OrderedCollection new.
 	aUser following do:[ :follow | followingCol addAll: follow questions ].
 	
+	"paso 2"
 	temp := followingCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
 	
+	"paso 3"
 	qRet := temp last: (100 min: temp size).
 	^qRet reject:[:q | q user = aUser].	
 </pre>
@@ -425,140 +434,152 @@ TopicsQuestionRetriever>>retrieveQuestions: aUser
 retrieveQuestions: aUser
 	| qRet temp topicsCol |
 	
+	"paso 1"
 	topicsCol := OrderedCollection new.
 	aUser topics do:[ :topic | topicsCol addAll: topic questions ].
 	
+	"paso 2"
 	temp := topicsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
 	
+	"paso 3"
 	qRet := temp last: (100 min: temp size).
 	^qRet reject:[:q | q user = aUser].
 </pre>
+>**Nota**: se agregan comentarios sólo de manera momentánea para organizar un poco el refactoring.
 
 *Refactoring*: **Form Template Method**
 
-Para la aplicación de este refactoring, en primer lugar hacemos **Extract Method** en todas las subclases para cada uno de los pasos mencionados, con un nombre en común que exprese la intención del paso. Los métodos creados se hacen con protocolo *private*, ya que consisten en funcionamiento interno para realizar *#retrieveQuestions: aUser*, de modo que este últomo sea el único método visible para **User**. Para obtener mayor legibilidad y mantener el mismo nombre de método para todas las subclases, aplicamos el refactoring **Parameterize Method**.
+Para la aplicación de este refactoring, en primer lugar hacemos **Extract Method** en todas las subclases para cada uno de los pasos mencionados, con un nombre en común que exprese la intención del paso. Los métodos creados se hacen con protocolo *private*, ya que consisten en funcionamiento interno para realizar *#retrieveQuestions: aUser*, de modo que este último sea el único método visible para **User**. Para obtener mayor legibilidad y mantener el mismo nombre de método para todas las subclases, aplicamos el refactoring **Parameterize Method**.
 
-Primero se extrae el código repetido para el paso 3 en un nuevo método *retrieveQuestionsFor: aUser from: aCollection*, quedando conformado de la siguiente manera:
+Primero aplicamos **Extract Method** con el código repetido para el **paso 3** en un nuevo método *#retrieveQuestionsFor: aUser from: questions*. Se observa que esta porción de código se encuentra en forma idéntica en todas las subclases, por lo tanto el método puede estar definido en la superclase ***QuestionRetriever***, realizando **Pull Up Method**.
 
 <pre>
-retrieveQuestionsFor: aUser from: aCollection
+QuestionRetriever>>retrieveQuestionsFor: aUser from: questions
 	| qRet |
-	qRet := aCollection last: (100 min: aCollection size).
+	qRet := questions last: (100 min: questions size).
 	^qRet reject:[:q | q user = aUser].
 </pre>
 
-Se observa que esta porción de código se encuentra en forma idéntica en todas las subclases, por lo que la implementación del método puede estar definida en ***QuestionRetriever***, realizando **Pull Up Method**.
+Observando el código es claro que el método hace dos cosas: obtener las últimas 100 preguntas de *questions* y filtrar aquellas cuyo user coincide con *aUser*. Decidimos aplicar **Extract Method** para separar ambos pasos en métodos privados, de manera que el método resulte más expresivo respecto a qué hace. 
 
 <pre>
-QuestionRetriever>>retrieveQuestionsFor: aUser from: aCollection
-	| qRet |
-	qRet := aCollection last: (100 min: aCollection size).
-	^qRet reject:[:q | q user = aUser].
+QuestionRetriever>>lastQuestions: questions 
+	^ questions last: (100 min: questions size).
 </pre>
 
-Finalmente, en el método *retrieveQuestions: aUser* de las subclases se utiliza el mensaje implementado en la superclase con *self*.
+<pre>
+QuestionRetriever>>rejectQuestionsWithAuthor: aUser from: questions 
+	^ questions reject: [ :q | q user = aUser ].
+</pre>
+
+Finalmente aplicamos **Replace Temp With Query** para remover la variable local | qRet |. 
+
+<pre>
+QuestionRetriever>>retrieveQuestionsFor: aUser from: questions
+	^ self rejectQuestionsWithAuthor: aUser from: (self lastQuestions: questions).
+</pre>
+
+Una vez implementado el **paso 3** en la superclase (que a su vez consiste en dos "sub-pasos"), se reemplaza el código correspondiente por una invocación en el método *retrieveQuestions: aUser* de las subclases. También se elimina la variable temporal *qRet*.
 
 <pre>
 NewsQuestionRetriever>>retrieveQuestions: aUser
-	| temp newsCol |
+	| questions newsCol |
 
 	newsCol := OrderedCollection new.
 	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
-	temp := newsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
-	^ self retrieveQuestionsFor: aUser from: temp. 
+	questions := newsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	^ self retrieveQuestionsFor: aUser from: questions. 
 </pre>
 
 <pre>
 PopularTodayQuestionRetriever>>retrieveQuestions: aUser
-	| temp popularTCol averageVotes |
+	| questions popularTCol averageVotes |
 	
 	popularTCol := OrderedCollection new.
 	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
 	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
-	temp := (popularTCol select:[:q | q positiveVotes size >= averageVotes ]) 
+	questions := (popularTCol select:[:q | q positiveVotes size >= averageVotes ]) 
 			asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
-	^ self retrieveQuestionsFor: aUser from: temp. 
+	^ self retrieveQuestionsFor: aUser from: questions. 
 </pre>
 
 <pre>
 SocialQuestionRetriever>>retrieveQuestions: aUser
-	| temp followingCol |
+	| questions followingCol |
 	
 	followingCol := OrderedCollection new.
 	aUser following do:[ :follow | followingCol addAll: follow questions ].
-	temp := followingCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
-	^ self retrieveQuestionsFor: aUser from: temp. 
+	questions := followingCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	^ self retrieveQuestionsFor: aUser from: questions. 
 </pre>
 
 <pre>
 TopicsQuestionRetriever>>retrieveQuestions: aUser
-	| temp topicsCol |
+	| questions topicsCol |
 	
 	topicsCol := OrderedCollection new.
 	aUser topics do:[ :topic | topicsCol addAll: topic questions ].
-	temp := topicsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
-	^ self retrieveQuestionsFor: aUser from: temp. 
-</pre>
->La variable temporal *qRet* se vuelve innecesaria y se quita de las 4 subclases.
-
-En segundo lugar se extrae el código repetido para el paso 2 en un nuevo método conformado de la siguiente manera:
-
-<pre>
-sortQuestionsByVotes: aCollection
-	^ aCollection asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
+	questions := topicsCol asSortedCollection:[ :a :b | a positiveVotes size > b positiveVotes size ].
+	^ self retrieveQuestionsFor: aUser from: questions. 
 </pre>
 
+En segundo lugar aplicamos **Extract Method** para el **paso 2** en un nuevo método *#sortQuestionsByVotes: questions*.
 Al igual que en el caso anterior, esta funcionalidad es idéntica para todas las subclases, y por lo tanto realizamos un **Pull Up Method**.
 
 <pre>
-QuestionRetriever>>sortQuestionsByVotes: aCollection
-	^ aCollection asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
+QuestionRetriever>>sortQuestionsByVotes: questions
+	^ questions asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
 </pre>
 
-Luego de aplicar este refactoring, el método *retrieveQuestions: aUser* quedaría implementado de esta manera en cada una de las subclases:
+Luego de aplicar este refactoring, el método *#retrieveQuestions: aUser* quedaría implementado de esta manera en cada una de las subclases:
 
 <pre>
 NewsQuestionRetriever>>retrieveQuestions: aUser
-	| temp newsCol |
+	| questions newsCol |
 	
 	newsCol := OrderedCollection new.
 	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]].
-	temp := self sortQuestionsByVotes: newsCol.
-	^ self retrieveQuestionsFor: aUser from: temp. 
+	questions := self sortQuestionsByVotes: newsCol.
+	^ self retrieveQuestionsFor: aUser from: questions. 
 </pre>
 
 <pre>
 PopularTodayQuestionRetriever>>retrieveQuestions: aUser
-	| temp popularTCol averageVotes |
+	| questions popularTCol averageVotes |
 	
 	popularTCol := OrderedCollection new.
 	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [popularTCol add: q]].
 	averageVotes := (cuoora questions sum: [:q | q positiveVotes size ]) / popularTCol size.
-	temp := self sortQuestionsByVotes: (popularTCol select:[:q | q positiveVotes size >= averageVotes ]).
-	^ self retrieveQuestionsFor: aUser from: temp. 
+	questions := self sortQuestionsByVotes: (popularTCol select:[:q | q positiveVotes size >= averageVotes ]).
+	^ self retrieveQuestionsFor: aUser from: questions. 
 </pre>
 
 <pre>
 SocialQuestionRetriever>>retrieveQuestions: aUser
-	| temp followingCol |
+	| questions followingCol |
 	
 	followingCol := OrderedCollection new.
 	aUser following do: [ :follow | followingCol addAll: follow questions ].
-	temp := self sortQuestionsByVotes: followingCol.
-	^ self retrieveQuestionsFor: aUser from: temp.
+	questions := self sortQuestionsByVotes: followingCol.
+	^ self retrieveQuestionsFor: aUser from: questions.
 </pre>
 
 <pre>
 TopicsQuestionRetriever>>retrieveQuestions: aUser
-	| temp topicsCol |
+	| questions topicsCol |
 	
 	topicsCol := OrderedCollection new.
 	aUser topics do: [ :topic | topicsCol addAll: topic questions ].
-	temp := self sortQuestionsByVotes: topicsCol.
-	^ self retrieveQuestionsFor: aUser from: temp
+	questions := self sortQuestionsByVotes: topicsCol.
+	^ self retrieveQuestionsFor: aUser from: questions
 </pre>
 
-Por último se realiza el **Extract Method** para el paso 1, pero en este caso no se realiza el **Pull Up Method** ya que cada subclase implementa este paso de una forma particular. En cambio, se implementa *getQuestionsFor: aUser* como un método abstracto en la superclase **QuestionRetriever**. A continuación se muestra el código resultante para cada clase:
+Por último se realiza el **Extract Method** para el **paso 1** en cada subclase, pero en este caso no se realiza el **Pull Up Method** ya que cada subclase implementa este paso de una forma particular. En cambio, se implementa *getQuestionsFor: aUser* como un método abstracto en la superclase **QuestionRetriever**.
+
+<pre>
+QuestionRetriever>>getQuestionsFor: aUser
+	^ self subclassResponsibility.
+</pre>
 
 <pre>
 NewsQuestionRetriever>>getQuestionsFor: aUser
@@ -597,14 +618,9 @@ TopicsQuestionRetriever>>getQuestionsFor: aUser
 	^ topicsCol
 </pre>
 
-<pre>
-QuestionRetriever(Abstract)>>getQuestionsFor: aUser
-	^ self subclassResponsibility.
-</pre>
+>**Nota**: En las clases **NewsQuestionRetriever** y **PopularTodayQuestionRetriever** se recibe un parámetro *aUser* pero no se utiliza en el método. En general, para estos casos se utiliza el refactoring **Remove Parameter**, pero este es un caso particular en el que nos interesa crear un metodo template que sea implementado de la misma forma por todas las subclases, y por lo tanto los nombres de los métodos involucrados deben ser iguales para todas (incluyendo los parametros).
 
->**Nota**: Se puede observar que en las clases **NewsQuestionRetriever** y **PopularTodayQuestionRetriever** se recibe un parámetro *aUser* pero no se utiliza en el método. En general, para estos casos se utiliza el refactoring **Remove Parameter**, pero este es un caso particular en el que nos interesa crear un metodo template que sea implementado de la misma forma por todas las subclases, y por lo tanto los nombres de los métodos involucrados deben ser iguales para todas (incluyendo los parametros).
-
-Luego de realizar estos refactoring, llegamos a que el método *RetrieveQuestions: aUser* sea idéntico en todas las subclases (la única diferencia es el nombre de una variable local). Procedemos a hacer un **Pull Up Method**, y para resolver el problema del nombre de la variable temporal aplicamos **Replace Temp With Query** de forma que no sea necesario utilizarla. Además cambiamos el nombre de la variable | temp | por uno un poco más expresivo, y en los métodos que reciben esa variable como parámetro también cambiamos el nombre para que queden iguales, ganando legibilidad. Luego se elimina el método de las subclases para que utilicen el de la superclase.
+Luego de realizar estos refactoring, llegamos a que el método *RetrieveQuestions: aUser* sea casi idéntico en todas las subclases, la única diferencia es el nombre de una variable temporal. Procedemos a hacer un **Pull Up Method**, y para resolver el problema del nombre de la variable temporal aplicamos **Replace Temp With Query** de forma que no sea necesario utilizarla. Luego se elimina el método de las subclases para que utilicen el de la superclase.
 
 <pre>
 QuestionRetriever>>retrieveQuestions: aUser
@@ -614,18 +630,32 @@ QuestionRetriever>>retrieveQuestions: aUser
 	^ self retrieveQuestionsFor: aUser from: questions. 
 </pre>
 
->**Nota**: también se podría remover la variable | questions | utilizando **Replace Temp With Query**, pero creemos que esto le quitaría legibilidad al código ya que quedarían los tres pasos condensados en una sola línea. 
+Notamos que los pasos 1 y 2 se realizan en la misma línea, y luego se realiza el paso 3. Considerando que los pasos 2 y 3 son iguales para todas las subclases, y que el paso 1 es particular a cada una, creemos que sería más conveniente agrupar los pasos 2 y 3. De hecho si analizamos el comportamiento de cada uno encontramos algo en común: ambos "preparan" o "le dan un formato" la colección de questions antes de retornarla.
+Utilizando **Move Method** reorganizamos el código de la siguiente manera:
 
-De esta manera, queda formado un método template que generaliza los pasos del algoritmo, e implementa el comportamiento que comparten las subclases de **QuestionRetriever**. A su vez cada subclase redefine el paso 1 de forma particular. 
-Esta forma de organizar el código aporta a que el proyecto sea *escalable*: si se decidieran agregar nuevas subclases de **QuestionRetriever**, que obtengan questions bajo nuevos "criterios", basta con utilizar el template method redefiniendo aquellos pasos que deben hacerse de forma diferente.
+<pre>
+QuestionRetriever>>retrieveQuestionsFor: aUser from: questions
+	| sortedQuestions |
+
+	sortedQuestions := self sortQuestionsByVotes: questions.
+	^ self rejectQuestionsWithAutor: aUser from: (self lastQuestions: sortedQuestions). 
+</pre>
+
+<pre>
+QuestionRetriever>>retrieveQuestions: aUser
+	^ self retrieveQuestionsFor: aUser from: (self getQuestionsFor: aUser).
+</pre>
+
+De esta manera queda formado un método template que generaliza los pasos del algoritmo, e implementa el comportamiento que comparten las subclases de **QuestionRetriever** (pasos 2 y 3). A su vez cada subclase redefine el paso 1 de forma particular. 
+Esta forma de organizar el código aporta a que el modelo sea *escalable*: si se decidieran agregar nuevas subclases de **QuestionRetriever**, que obtengan questions bajo nuevos "criterios", basta con utilizar el template method redefiniendo en la nueva subclase aquellos pasos que deben hacerse de forma diferente.
 ____________________________________________________________________
 
 #### *Bad smell*: Feature Envy
 
 Observamos que **QuestionRetriever** y sus subclases tienen varios métodos que presentan este bad smell. En pocas palabras, en estos métodos se realizan operaciones con atributos y mensajes que pertenecen (la mayoría) a las clases **User** y **CuOOra**. Es decir, le "piden" datos que necesitan de estas clases para realizar distintas operaciones. 
-Esto se considera un bad smell, ya que la responsabilidad de implementar cierta funcionalidad debe recaer en las clases que poseen los datos necesarios para llevar a cabo dicha funcionalidad. 
+Esto se considera un bad smell, ya que la responsabilidad de implementar una funcionalidad debe recaer en las clases que poseen los datos necesarios para llevar a cabo dicha funcionalidad. 
 
-La forma de refactorizar esto es similar en todos los casos, consiste en determinar quién tiene la responsabilidad de cada operación, para luego delegar la implementación a la clase que corresponda con **Extract Method** y **Move Method**.
+La forma de refactorizar es similar en todos los casos, consiste en determinar quién tiene la responsabilidad de cada operación, para luego delegar la implementación a la clase que corresponda con **Extract Method** y **Move Method**.
 
 A continuación se pueden ver los métodos con *Feature Envy* y sus respectivos *refactorings*.
 
@@ -636,8 +666,9 @@ QuestionRetriever>>sortQuestionsByVotes: questions
 	^ questions asSortedCollection: [ :a :b | a positiveVotes size > b positiveVotes size ].
 </pre>
 
-En este caso **QuestionRetriever** obtiene la colección de votos positivos de cada respuesta, para luego calcular su tamaño.
-*Refactoring*: delegar la responsabilidad de hacer esta operación a la clase **Publication** (ya que tanto **Question** como **Answer** tienen una colección de votos positivos).
+En este caso ***QuestionRetriever*** obtiene la colección de votos positivos de cada respuesta, para luego calcular su tamaño.
+
+*Refactoring*: delegar la responsabilidad de hacer este cálculo a la clase **Publication** (ya que tanto **Question** como **Answer** tienen una colección de votos positivos).
 
 <pre>
 Publication>>sizeOfPositiveVotes
@@ -650,17 +681,15 @@ QuestionRetriever>>sortQuestionsByVotes: questions
 </pre>
 
 
-**QuestionRetriever>>retrieveQuestionsFor: aUser from: questions**
+**QuestionRetriever>>rejectQuestionsWithAuthor: aUser from: questions**
 
 <pre>
-QuestionRetriever>>retrieveQuestionsFor: aUser from: questions
-	| qRet |
-	
-	qRet := questions last: (100 min: questions size).
-	^qRet reject:[:q | q user = aUser].
+QuestionRetriever>>rejectQuestionsWithAuthor: aUser from: questions 
+	^ questions reject: [ :q | q user = aUser ].
 </pre>
 
-En este caso el *Feature Envy* se da en la última linea, se accede a la variable privada *user* de cada *question* para verificar si es el mismo user recibido como parámetro.
+En este caso el *Feature Envy* es que se accede a la variable privada *user* de cada *question* para verificar si es el mismo user recibido como parámetro.
+
 *Refactoring*: se delega a **Publication** la tarea de verificar si *aUser* es el *user* asociado a un objeto *question* o *answer*.
 
 <pre>
@@ -669,35 +698,8 @@ Publication>>hasTheAuthor: aUser
 </pre>
 
 <pre>
-QuestionRetriever>>retrieveQuestionsFor: aUser from: questions
-	| qRet |
-	
-	qRet := questions last: (100 min: questions size).
-	^ qRet reject: [ :q | q hasTheAuthor: aUser ].
-</pre>
-
-Observando el código es claro que el método hace dos cosas: obtener las últimas 100 preguntas de *questions* y filtrar aquellas cuyo user coincide con *aUser*. Para hacerlo más legible, aplicamos **Extract Method** para ambos pasos para que cada uno sea un método privado. Además agregamos un método privado que retorne la cantidad de questions que se desean obtener en el primer paso, para que este número no quede "harcodeado" en el código, y sea fácil de adaptar en el caso de ser necesario modificar el número.
-
-<pre>
-QuestionRetriever>>numberOfLastQuestions
-	^ 100.
-</pre>
-
-<pre>
-QuestionRetriever>>getLastQuestionsFrom: questions 
-	^ questions last: (self numberOfLastQuestions min: questions size).
-</pre>
-
-<pre>
-QuestionRetriever>>rejectQuestionsFrom: questions withAuthor: aUser
+QuestionRetriever>>rejectQuestionsWithAuthor: aUser from: questions 
 	^ questions reject: [ :q | q hasTheAuthor: aUser ].
-</pre>
-
-Finalmente aplicamos **Replace Temp With Query** para remover la variable local | qRet |. 
-
-<pre>
-QuestionRetriever>>retrieveQuestionsFor: aUser from: questions
-	^ self rejectQuestionsFrom: (self getLastQuestionsFrom: questions) withAuthor: aUser.
 </pre>
 
 
@@ -708,12 +710,13 @@ NewsQuestionRetriever>>getQuestionsFor: aUser
 	| newsCol |
 	
 	newsCol := OrderedCollection new.
-	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]]. "cuoora todayQuestions"
+	cuoora questions do:[:q | (q timestamp asDate = Date today) ifTrue: [newsCol add: q]]. 
 	^ newsCol
 </pre>
 
 En este método se observan dos casos de *Feature Envy*: por un lado **NewsQuestionRetriever** accede a la variable *questions* de *cuoora* para realizar una operación sobre la colección (además se itera con *do:*, con olor a **Reinventando la Rueda**), y por otro lado se accede a la variable *timestamp* de cada *question* de la colección para verificar que sea del día actual. 
-*Refactoring*: se delega a **Publication** la responsabilidad de verificar si un objeto *answer* o *question* fue instanciado en el día actual. Y se delega a **CuOOra** la tarea de obtener preguntas del día, que en vez de hacerlo con *do:* utiliza *select:*.
+
+*Refactoring*: se delega a **Publication** la responsabilidad de verificar si un objeto *answer* o *question* fue instanciado en el día actual. Y se delega a **CuOOra** la tarea de obtener preguntas del día, utilizando *select:* en lugar de *do:*. También se elimina la variable temporal | newsCol |. Luego se simplifica el método reemplazando la variable |newsCol| por una llamada al mensaje de *quoora*.
 
 <pre>
 Publication>>isFromToday
@@ -743,7 +746,26 @@ PopularTodayQuestionRetriever>>getQuestionsFor: aUser
 	^ (popularTCol select:[:q | q positiveVotes size >= averageVotes ])
 	
 </pre>
-	
+
+En este caso el *Feature Envy* se da porque **PopularTodayQuestionRetriever** accede a la variable *questions* de *cuoora* para seleccionar aquellas que sean del día actual (ya refactorizado con *#todayQuestions*), y luego realiza un cálculo de promedio con dicha colección para finalmente filtrar aquellas preguntas con votos positivos superiores al promedio.
+
+*Refactoring*: Se delega a **CuOOra** la tarea de obtener las preguntas del día que superen el promedio de votos positivos (así como también la tarea de calcular dicho promedio). 
+
+<pre>
+CuOOra>>averageVotes
+	^ (questions sumNumbers: [:q | q sizeOfPositiveVotes ]) / self todayQuestions size.
+</pre>
+
+<pre>
+CuOOra>>todayQuestionsAboveAverage
+	^ self todayQuestions select: [ :q | q sizeOfPositiveVotes >= self averageVotes ].
+</pre>
+
+<pre>
+PopularTodayQuestionRetriever>>getQuestionsFor: aUser	
+	^ cuoora todayQuestionsAboveAverage.
+</pre>
+
 	
 **SocialQuestionRetriever>>getQuestionsFor: aUser**
 
@@ -767,15 +789,4 @@ TopicsQuestionRetriever>>getQuestionsFor: aUser
 	aUser topics do: [ :topic | topicsCol addAll: topic questions ]. "aUser topicsQuestions"
 	^ topicsCol
 </pre>
-____________________________________________________________________
-
-Se me ocurre que podemos usar **Encapsulate Collection** en las clases que tienen getters para colecciones. Para el caso de Smalltalk sería retornar una copia.
-#answers --> ^ answers copy. en vez de ^ answers.
-en algunos casos tambien se podria usar **Self Encapsulate Field**. por ejemplo
-User>>questionsOfInterest
-	^ questionRetriever retrieveQuestions: self.
-podria ser
-User>>questionsOfInterest
-	^ self questionRetriever retrieveQuestions: self.
-(ya tiene implementado el getter)
 
