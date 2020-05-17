@@ -26,6 +26,11 @@ Publication >> description: anObject [
 ]
 
 { #category : #testing }
+Publication >> hasMorePositiveVotesThan: aPublication [
+	^ self sizeOfPositiveVotes > aPublication sizeOfPositiveVotes.
+]
+
+{ #category : #testing }
 Publication >> hasTheAuthor: aUser [
 	^ self user = aUser.
 ]

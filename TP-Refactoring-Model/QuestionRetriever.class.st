@@ -53,5 +53,6 @@ QuestionRetriever >> retrieveQuestionsFor: aUser from: questions [
 { #category : #private }
 QuestionRetriever >> sortQuestionsByVotes: questions [
 
-	^ questions asSortedCollection: [ :a :b | a sizeOfPositiveVotes > b sizeOfPositiveVotes ].
+	^ questions asSortedCollection: [ :a :b | a hasMorePositiveVotesThan: b ].
+	
 ]

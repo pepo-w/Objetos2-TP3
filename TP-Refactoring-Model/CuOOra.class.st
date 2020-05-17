@@ -34,7 +34,7 @@ CuOOra >> addUser: aUser [
 
 { #category : #private }
 CuOOra >> averageVotes [
-	^ (questions sumNumbers: [:q | q sizeOfPositiveVotes ]) / self todayQuestions size.
+	^ (self questions sumNumbers: [:q | q sizeOfPositiveVotes ]) / self todayQuestions size.
 ]
 
 { #category : #initialize }
