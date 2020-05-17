@@ -472,14 +472,14 @@ QuestionRetriever>>rejectQuestionsWithAuthor: aUser from: questions
 	^ questions reject: [ :q | q user = aUser ].
 </pre>
 
-Finalmente aplicamos **Replace Temp With Query** para remover la variable local | qRet |. 
+Finalmente aplicamos **Replace Temp With Query** para remover la variable local |qRet|. 
 
 <pre>
 QuestionRetriever>>retrieveQuestionsFor: aUser from: questions
 	^ self rejectQuestionsWithAuthor: aUser from: (self lastQuestions: questions).
 </pre>
 
-Una vez implementado el **paso 3** en la superclase (que a su vez consiste en dos "sub-pasos"), se reemplaza el código correspondiente por una invocación en el método *retrieveQuestions: aUser* de las subclases. También se elimina la variable temporal *qRet*.
+Una vez implementado el **paso 3** en la superclase (que a su vez consiste en dos "sub-pasos"), se reemplaza el código correspondiente por una invocación en el método *retrieveQuestions: aUser* de las subclases. También se elimina la variable temporal |qRet|.
 
 <pre>
 NewsQuestionRetriever>>retrieveQuestions: aUser
@@ -630,7 +630,7 @@ QuestionRetriever>>retrieveQuestions: aUser
 	^ self retrieveQuestionsFor: aUser from: questions. 
 </pre>
 
-Notamos que los pasos 1 y 2 se realizan en la misma línea, y luego se realiza el paso 3. Considerando que los pasos 2 y 3 son iguales para todas las subclases, y que el paso 1 es particular a cada una, creemos que sería más conveniente agrupar los pasos 2 y 3. De hecho si analizamos el comportamiento de cada uno encontramos algo en común: ambos "preparan" o "le dan un formato" la colección de questions antes de retornarla.
+Notamos que los pasos 1 y 2 se realizan en la misma línea, y luego se realiza el paso 3. Considerando que los pasos 2 y 3 son iguales para todas las subclases, y que el paso 1 es particular a cada una, creemos que sería más conveniente agrupar los pasos 2 y 3. De hecho, si analizamos el comportamiento de cada uno encontramos algo en común: ambos "preparan" o "le dan un formato" la colección de questions antes de retornarla.
 Utilizando **Move Method** reorganizamos el código de la siguiente manera:
 
 <pre>
@@ -716,7 +716,7 @@ NewsQuestionRetriever>>getQuestionsFor: aUser
 
 En este método se observan dos casos de *Feature Envy*: por un lado **NewsQuestionRetriever** accede a la variable *questions* de **CuOOra** para realizar una operación sobre la colección (además se itera con *#do:*, con olor a **Reinventando la Rueda**), y por otro lado se accede a la variable *timestamp* de **Question** para verificar que sea del día actual. 
 
-*Refactoring*: se delega a **Publication** la responsabilidad de verificar si un objeto *answer* o *question* fue instanciado en el día actual. Y se delega a **CuOOra** la tarea de obtener preguntas del día, utilizando *#select:* en lugar de *#do:*. Luego se simplifica el método reemplazando la variable |newsCol| por una llamada al mensaje de *quoora*.
+*Refactoring*: se delega a **Publication** la responsabilidad de verificar si un objeto *answer* o *question* fue instanciado en el día actual. Y se delega a **CuOOra** la tarea de obtener preguntas del día, utilizando *#select:* en lugar de *#do:* (**Substitute Algorithm**). Luego se simplifica el método reemplazando la variable |newsCol| por una llamada al mensaje de *quoora*.
 
 <pre>
 Publication>>isFromToday
@@ -749,7 +749,7 @@ PopularTodayQuestionRetriever>>getQuestionsFor: aUser
 
 *Feature Envy*: **PopularTodayQuestionRetriever** accede a la variable *questions* de **CuOOra** para seleccionar aquellas que sean del día actual (ya refactorizado con *#todayQuestions*), y luego realiza un cálculo de promedio con dicha colección para finalmente filtrar aquellas preguntas con votos positivos superiores al promedio.
 
-*Refactoring*: Se delega a **CuOOra** la tarea de obtener las preguntas del día que superen el promedio de votos positivos (así como también la tarea de calcular dicho promedio). 
+*Refactoring*: Se delega a **CuOOra** la tarea de obtener las preguntas del día que superen el promedio de votos positivos (así como también la tarea de calcular dicho promedio). También aplicamos **Substitute Algorithm** para utilizar *#sumNumbers:* en lugar de *#sum:* (consideramos que es una mejor implementación).
 
 <pre>
 CuOOra>>averageVotes
@@ -780,7 +780,7 @@ SocialQuestionRetriever>>getQuestionsFor: aUser
 
 *Feature Envy*: **SocialQuestionRetriever** accede a la colección *following* de **User** para obtener las questions de cada uno de los users a los que sigue *aUser*.
 
-*Refactoring*: se delega a **User** la función de obtener las preguntas de los usuarios que sigue, utilizando *#flatCollect:* en lugar de *#do:*. Luego se reemplaza la variable |followingCol| por una llamada al mensaje de *aUser*.
+*Refactoring*: se delega a **User** la función de obtener las preguntas de los usuarios que sigue, utilizando *#flatCollect:* en lugar de *#do:* (**Substitute Algorithm**). Luego se reemplaza la variable |followingCol| por una llamada al mensaje de *aUser*.
 
 <pre>
 User>>followingQuestions
@@ -806,7 +806,7 @@ TopicsQuestionRetriever>>getQuestionsFor: aUser
 
 *Feature Envy*: **TopicsQuestionRetriever** accede a la colección *topics* de **User** para obtener las questions que tiene cada *topic*.
 
-*Refactoring*: se delega a **User** la función de obtener las preguntas de los topicos que tiene, utilizando *#flatCollect:* en lugar de *#do:*. Luego se reemplaza la variable |topicsCol| por una llamada al mensaje de *aUser*.
+*Refactoring*: se delega a **User** la función de obtener las preguntas de los topicos que tiene, utilizando *#flatCollect:* en lugar de *#do:* (**Substitute Algorithm**). Luego se reemplaza la variable |topicsCol| por una llamada al mensaje de *aUser*.
 
 <pre>
 User>>topicsQuestions
